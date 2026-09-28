@@ -1,10 +1,13 @@
 # ✏️ testyAI — AI-Powered Study & Exam Prep Platform
 
+[![Live Demo](https://img.shields.io/badge/Live_Demo-testyai.onrender.com-00c7b7?style=flat-square&logo=render&logoColor=white)](https://testyai.onrender.com)
 [![Node.js](https://img.shields.io/badge/Node.js-v18+-68a063?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![Express](https://img.shields.io/badge/Express-4.19-000000?style=flat-square&logo=express&logoColor=white)](https://expressjs.com/)
 [![Firebase](https://img.shields.io/badge/Firebase-Auth%20%26%20Firestore-ffca28?style=flat-square&logo=firebase&logoColor=black)](https://firebase.google.com/)
 [![Groq](https://img.shields.io/badge/AI-Groq%20%7C%20Cerebras-f55036?style=flat-square)](https://groq.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
+
+> 🚀 **Live Demo**: Try testyAI live at **[https://testyai.onrender.com](https://testyai.onrender.com)**
 
 **testyAI** is an intelligent, full-stack active-recall study companion. Upload study notes or textbook chapters in any format (PDF, DOCX, TXT) — including multi-file uploads across different subjects — and testyAI instantly crafts structured flashcards, multiple-choice quizzes with explanations, and exam-style long-answer questions. 
 
