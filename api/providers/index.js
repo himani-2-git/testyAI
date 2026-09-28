@@ -8,9 +8,9 @@
 // ============================================================
 
 const { callGroq } = require('./groq');
+const { callCerebras } = require('./cerebras');
 
 // ── Provider registry ──
-// Add new providers here without touching any other file.
 const PROVIDERS = [
   {
     name: 'groq-gpt-oss-120b',
@@ -20,10 +20,17 @@ const PROVIDERS = [
   {
     name: 'groq-qwen-27b',
     call: (systemPrompt, userPrompt) =>
-      callGroq(systemPrompt, userPrompt, process.env.GROQ_API_KEY, 'qwen/qwen3.8-27b')
+      callGroq(systemPrompt, userPrompt, process.env.GROQ_API_KEY_2 || process.env.GROQ_API_KEY, 'qwen/qwen3.8-27b')
   }
-  // To add a provider: { name: '...', call: (sys, usr) => yourProviderFn(...) }
 ];
+
+if (process.env.CEREBRAS_API_KEY) {
+  PROVIDERS.push({
+    name: 'cerebras-llama-70b',
+    call: (systemPrompt, userPrompt) =>
+      callCerebras(systemPrompt, userPrompt)
+  });
+}
 
 /**
  * Calls providers in order. Falls back on:
