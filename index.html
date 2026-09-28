@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>testyAI — Sign In</title>
+<link rel="stylesheet" href="css/shared.css">
+<!-- Firebase compat SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="js/config.js"></script>
+<script src="js/db.js"></script>
+<style>
+/* ── Page-specific styles ── */
+body::before { display: none; } /* no margin line on login page */
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.login-card {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 22px;
+  box-shadow: var(--shadow-lg);
+  padding: 44px 42px;
+  width: 100%;
+  max-width: 430px;
+  position: relative;
+  overflow: hidden;
+  animation: cardIn .4s cubic-bezier(.34,1.2,.64,1);
+}
+@keyframes cardIn {
+  from { opacity:0; transform: scale(.94) translateY(16px); }
+  to   { opacity:1; transform: scale(1)  translateY(0); }
+}
+
+/* Corner decoration */
+.login-card::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 180px; height: 180px;
+  border-radius: 50%;
+  background: var(--tiger-dim);
+}
+.login-card::after {
+  content: '';
+  position: absolute;
+  bottom: -40px; left: -40px;
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  background: var(--aqua-dim);
+}
+
+.login-logo {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 28px;
+  position: relative; z-index: 1;
+}
+.login-logo-icon {
+  width: 40px; height: 40px;
+  background: #ffecdb; border: 1.5px solid rgba(255, 87, 20, 0.28);
+  border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  box-shadow: 0 4px 14px rgba(255, 87, 20, 0.10);
+}
+.login-logo-text {
+  font-size: 24px; font-weight: 900; letter-spacing: -1px; color: var(--ink);
+}
+.login-logo-text span { color: var(--tiger); }
+
+.login-headline {
+  font-size: 22px; font-weight: 800; letter-spacing: -.5px;
+  color: var(--ink); margin-bottom: 6px;
+  position: relative; z-index: 1;
+}
+.login-sub {
+  font-size: 13px; color: var(--muted); margin-bottom: 28px; line-height: 1.6;
+  position: relative; z-index: 1;
+}
+
+/* Google button */
+.btn-google {
+  width: 100%;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 10px; padding: 13px;
+  font-family: var(--font); font-size: 14px; font-weight: 600; color: var(--ink);
+  cursor: pointer; transition: all .2s;
+  box-shadow: var(--shadow);
+  position: relative; z-index: 1;
+}
+.btn-google:hover { border-color: var(--tiger); box-shadow: 0 4px 16px var(--tiger-dim); transform: translateY(-1px); }
+.google-logo { width: 20px; height: 20px; flex-shrink: 0; }
+
+/* OR divider */
+.or-row {
+  display: flex; align-items: center; gap: 12px;
+  margin: 22px 0; position: relative; z-index: 1;
+}
+.or-line { flex: 1; height: 1px; background: var(--border); }
+.or-text  { font-size: 12px; color: var(--muted); font-weight: 500; }
+
+/* Email form */
+.login-form { display: flex; flex-direction: column; gap: 11px; position: relative; z-index: 1; }
+.input-label {
+  font-size: 11px; font-weight: 700; color: var(--muted);
+  letter-spacing: .5px; text-transform: uppercase; margin-bottom: 4px; display: block;
+}
+.input-wrap { position: relative; }
+.input-icon {
+  position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+  font-size: 15px; pointer-events: none;
+}
+.input-with-icon { padding-left: 38px; }
+
+.form-actions { display: flex; gap: 9px; margin-top: 4px; }
+.form-actions .btn { flex: 1; justify-content: center; border-radius: 10px; padding: 13px; font-size: 13px; }
+
+.login-toggle {
+  text-align: center; margin-top: 14px; font-size: 12px; color: var(--muted);
+  position: relative; z-index: 1;
+}
+.login-toggle a { color: var(--tiger); font-weight: 600; cursor: pointer; text-decoration: none; }
+.login-toggle a:hover { text-decoration: underline; }
+
+.error-box {
+  display: none;
+  background: var(--tiger-dim); border: 1px solid var(--tiger-glow);
+  border-radius: 8px; padding: 10px 14px;
+  font-size: 12px; color: #b83000; font-weight: 500;
+  margin-top: 10px; position: relative; z-index: 1;
+}
+.error-box.show { display: block; }
+</style>
+</head>
+<body>
+<div class="login-page">
+  <div class="login-card">
+
+    <!-- Logo -->
+    <div class="login-logo">
+      <div class="login-logo-icon">✏️</div>
+      <div class="login-logo-text">testy<span>AI</span></div>
+    </div>
+
+    <!-- Headline -->
+    <div class="login-headline">Turn notes into tests ⚡</div>
+    <div class="login-sub">Upload any notes · Get flashcards, MCQs, or long answers instantly.</div>
+
+    <!-- Google Sign-In -->
+    <button class="btn-google" id="googleBtn" onclick="signInGoogle()">
+      <svg class="google-logo" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+      </svg>
+      Continue with Google
+    </button>
+
+    <!-- OR -->
+    <div class="or-row">
+      <div class="or-line"></div>
+      <span class="or-text">or use email</span>
+      <div class="or-line"></div>
+    </div>
+
+    <!-- Email/Password Form -->
+    <div class="login-form" id="loginForm">
+      <div>
+        <label class="input-label">Email Address</label>
+        <div class="input-wrap">
+          <span class="input-icon">📧</span>
+          <input class="input input-with-icon" type="email" id="emailInput" placeholder="you@example.com" autocomplete="email">
+        </div>
+      </div>
+      <div>
+        <label class="input-label">Password</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <input class="input input-with-icon" type="password" id="passInput" placeholder="••••••••" autocomplete="current-password">
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-secondary" id="signInBtn" onclick="signInEmail()">Sign In</button>
+        <button class="btn btn-primary"   id="signUpBtn" onclick="signUpEmail()">Create Account</button>
+      </div>
+    </div>
+
+    <!-- Error message -->
+    <div class="error-box" id="errorBox"></div>
+
+    <!-- Toggle hint -->
+    <div class="login-toggle">
+      Forgot password?
+      <a onclick="resetPassword()">Send reset email</a>
+    </div>
+
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+// ── Redirect if already logged in ──
+auth.onAuthStateChanged(async user => {
+  if (!user) return;
+
+  try {
+    await createOrUpdateUser(user); // 🔥 THIS FIXES EVERYTHING
+    console.log("Profile ensured ✅");
+  } catch (e) {
+    console.error("Profile error ❌", e);
+  }
+
+  window.location.href = 'app.html';
+});
+
+// ── Google Sign-In ──
+async function signInGoogle() {
+  setLoading(true);
+  try {
+    const result = await auth.signInWithPopup(googleProvider);
+    await createOrUpdateUser(result.user);
+    window.location.href = 'app.html';
+  } catch (err) {
+    showError(friendlyError(err));
+  } finally {
+    setLoading(false);
+  }
+}
+
+// ── Email Sign-In ──
+async function signInEmail() {
+  const email = document.getElementById('emailInput').value.trim();
+  const pass  = document.getElementById('passInput').value;
+  if (!email || !pass) { showError('Please fill in both fields.'); return; }
+  setLoading(true);
+  try {
+    const result = await auth.signInWithEmailAndPassword(email, pass);
+    await createOrUpdateUser(result.user);
+    window.location.href = 'app.html';
+  } catch (err) {
+    showError(friendlyError(err));
+  } finally {
+    setLoading(false);
+  }
+}
+
+// ── Email Sign-Up ──
+async function signUpEmail() {
+  const email = document.getElementById('emailInput').value.trim();
+  const pass  = document.getElementById('passInput').value;
+  if (!email || !pass) { showError('Please fill in both fields.'); return; }
+  if (pass.length < 6)  { showError('Password must be at least 6 characters.'); return; }
+  setLoading(true);
+  try {
+    const result = await auth.createUserWithEmailAndPassword(email, pass);
+    await createOrUpdateUser(result.user);
+    window.location.href = 'app.html';
+  } catch (err) {
+    showError(friendlyError(err));
+  } finally {
+    setLoading(false);
+  }
+}
+
+// ── Password Reset ──
+async function resetPassword() {
+  const email = document.getElementById('emailInput').value.trim();
+  if (!email) { showError('Enter your email above first.'); return; }
+  try {
+    await auth.sendPasswordResetEmail(email);
+    showToast('Reset email sent! Check your inbox.', 'success');
+  } catch (err) {
+    showError(friendlyError(err));
+  }
+}
+
+// ── Helpers ──
+function setLoading(on) {
+  document.getElementById('googleBtn').disabled = on;
+  document.getElementById('signInBtn').disabled = on;
+  document.getElementById('signUpBtn').disabled = on;
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorBox');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+function friendlyError(err) {
+  const map = {
+    'auth/user-not-found':       'No account found with this email.',
+    'auth/wrong-password':       'Incorrect password.',
+    'auth/email-already-in-use': 'An account already exists with this email. Try signing in.',
+    'auth/invalid-email':        'Invalid email address.',
+    'auth/weak-password':        'Password is too weak (min 6 characters).',
+    'auth/popup-closed-by-user': 'Google sign-in was cancelled.',
+    'auth/network-request-failed': 'Network error. Check your connection.',
+  };
+  return map[err.code] || err.message || 'Something went wrong. Try again.';
+}
+
+function showToast(msg, type = 'info') {
+  const wrap = document.getElementById('toastWrap');
+  const el   = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+// Enter key support
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') signInEmail();
+});
+</script>
+</body>
+</html>

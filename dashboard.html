@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>testyAI — Dashboard</title>
+<link rel="stylesheet" href="css/shared.css">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="js/config.js"></script>
+<script src="js/db.js"></script>
+<style>
+main { max-width: 1000px; margin: 0 auto; padding: 36px 22px 100px; }
+
+/* ── Welcome bar ── */
+.welcome { display:flex; align-items:center; justify-content:space-between; margin-bottom:32px; flex-wrap:wrap; gap:12px; }
+.welcome h1 { font-size:24px; font-weight:800; letter-spacing:-.5px; }
+.welcome h1 span { color:var(--tiger); }
+.welcome p { font-size:13px; color:var(--muted); margin-top:3px; }
+
+/* ── Streak hero card ── */
+.streak-card {
+  background: linear-gradient(135deg, #fff8e6 0%, #fff3cc 100%);
+  border: 2px solid var(--amber-glow);
+  border-radius: 20px; padding: 28px 32px;
+  display: flex; align-items: center; gap: 24px;
+  box-shadow: 0 4px 20px var(--amber-glow);
+  margin-bottom: 24px;
+}
+.streak-fire { font-size: 52px; line-height: 1; flex-shrink: 0; animation: sway 2s ease-in-out infinite; }
+@keyframes sway { 0%,100%{transform:rotate(-4deg)} 50%{transform:rotate(4deg)} }
+.streak-info h2 { font-size: 38px; font-weight: 900; color: var(--ink); letter-spacing: -2px; line-height: 1; }
+.streak-info h2 span { color: var(--amber); }
+.streak-info p { font-size: 14px; color: var(--ink2); margin-top: 4px; font-weight: 500; }
+.streak-info .streak-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.streak-badges { margin-left: auto; display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+.streak-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; background: var(--amber-dim); color: #7a5500; border: 1px solid var(--amber-glow); }
+
+/* ── Stats row ── */
+.stats-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 28px; }
+.stat-card { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--r); padding: 22px 20px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+.stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.stat-card.acc::before  { background: var(--green); }
+.stat-card.tests::before { background: var(--aqua); }
+.stat-card.qs::before   { background: var(--tiger); }
+.stat-val { font-size: 36px; font-weight: 900; letter-spacing: -1px; margin-bottom: 4px; }
+.stat-card.acc  .stat-val { color: var(--green); }
+.stat-card.tests .stat-val { color: var(--aqua); }
+.stat-card.qs   .stat-val { color: var(--tiger); }
+.stat-lbl { font-size: 12px; color: var(--muted); font-weight: 500; }
+.stat-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+/* ── Two-column layout ── */
+.dash-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; margin-bottom: 28px; }
+
+/* ── Panel card ── */
+.panel { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--r); padding: 22px; box-shadow: var(--shadow); min-width: 0; }
+.panel-title { font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+.panel-title span { font-size: 16px; }
+
+/* ── Subject Filter Bar ── */
+.subject-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+.subject-bar-lbl { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+.subject-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.subj-chip { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1.5px solid var(--border); background: var(--white); color: var(--ink2); cursor: pointer; transition: all .18s; display: inline-flex; align-items: center; gap: 6px; }
+.subj-chip:hover { border-color: var(--tiger); color: var(--tiger); }
+.subj-chip.active { background: var(--tiger-dim); border-color: var(--tiger); color: var(--tiger); font-weight: 700; }
+.subj-tag { font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 6px; margin-right: 7px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; letter-spacing: .4px; line-height: 1.3; }
+.subj-tag.subj-ml   { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.subj-tag.subj-eng  { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+.subj-tag.subj-math { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+.subj-tag.subj-sci  { background: #faf5ff; color: #7e22ce; border: 1px solid #e9d5ff; }
+.subj-tag.subj-gen  { background: rgba(0,0,0,.06); color: var(--muted); border: 1px solid rgba(0,0,0,.08); }
+
+/* ── Weak / Strong topics ── */
+.topic-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.topic-row:last-child { margin-bottom: 0; }
+.topic-label { font-size: 13px; font-weight: 600; color: var(--ink); min-width: 0; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; }
+.topic-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
+.topic-bar-wrap { flex: 0 0 65px; width: 65px; height: 8px; background: rgba(0,0,0,.07); border-radius: 4px; overflow: hidden; flex-shrink: 0; }
+.topic-bar { height: 100%; border-radius: 4px; transition: width .6s ease; }
+.topic-pct { font-size: 12px; font-weight: 700; min-width: 34px; text-align: right; flex-shrink: 0; }
+.topic-row.weak   .topic-bar { background: var(--tiger); }
+.topic-row.weak   .topic-pct { color: var(--tiger); }
+.topic-row.strong .topic-bar { background: var(--green); }
+.topic-row.strong .topic-pct { color: #1a8c30; }
+
+/* Smart feedback box */
+.feedback-box { background: var(--lime-dim, rgba(228,255,26,.1)); border: 1.5px solid rgba(228,255,26,.4); border-radius: var(--r-sm); padding: 14px 16px; font-size: 13px; color: var(--ink2); line-height: 1.7; margin-top: 14px; }
+.feedback-box strong { color: var(--ink); }
+
+/* ── Score chart ── */
+.chart-wrap { margin-top: 12px; overflow-x: auto; padding-bottom: 4px; }
+.chart-bars { display: flex; align-items: flex-end; gap: 14px; height: 110px; }
+.chart-bar-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 50px; flex-shrink: 0; }
+.chart-bar { width: 100%; border-radius: 6px 6px 0 0; transition: height .5s ease; min-height: 4px; }
+.chart-date { font-size: 10px; color: var(--muted); white-space: nowrap; font-weight: 500; }
+.chart-val  { font-size: 11px; font-weight: 700; }
+.chart-empty { text-align:center; padding:24px 0; font-size:13px; color:var(--muted); }
+
+/* ── Test history ── */
+.history-list { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.hist-item { display: flex; align-items: center; gap: 12px; background: var(--card); border: 1.5px solid var(--border); border-radius: var(--r-sm); padding: 13px 16px; transition: all .18s; text-decoration: none; color: inherit; box-shadow: var(--shadow); min-width: 0; }
+.hist-item:hover { border-color: var(--tiger); transform: translateX(3px); }
+.hist-icon { width: 38px; height: 38px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.hist-icon.mcq      { background: var(--aqua-dim); }
+.hist-icon.flashcard { background: var(--green-dim); }
+.hist-icon.long      { background: var(--amber-dim); }
+.hist-info { flex: 1; overflow: hidden; min-width: 0; }
+.hist-title { font-size: 13px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hist-meta  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.hist-score { font-size: 13px; font-weight: 800; flex-shrink: 0; }
+.hist-score.good { color: var(--green); }
+.hist-score.mid  { color: var(--amber); }
+.hist-score.bad  { color: var(--tiger); }
+.hist-score.na   { color: var(--muted); }
+.hist-tag { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; flex-shrink: 0; }
+.hist-tag.mcq      { background: var(--aqua-dim); color: #007e8f; }
+.hist-tag.flashcard { background: var(--green-dim); color: #1a8c30; }
+.hist-tag.long      { background: var(--amber-dim); color: #8a6200; }
+.delete-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 3px 6px; border-radius: 5px; transition: all .15s; flex-shrink: 0; }
+.delete-btn:hover { background: var(--tiger-dim); color: var(--tiger); }
+
+/* ── Empty states ── */
+.empty { text-align: center; padding: 28px 16px; font-size: 13px; color: var(--muted); }
+.empty .e-icon { font-size: 32px; display: block; margin-bottom: 8px; }
+
+@media(max-width:720px) {
+  .dash-grid  { grid-template-columns: 1fr; }
+  .stats-row  { grid-template-columns: 1fr; }
+  .streak-card { flex-direction: column; align-items: flex-start; }
+  .streak-badges { align-items: flex-start; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a class="nav-logo" href="app.html">
+    <div class="nav-logo-icon">✏️</div>
+    <div class="nav-logo-text">testy<span>AI</span></div>
+  </a>
+  <div class="nav-links">
+    <a class="nav-link" href="app.html">⚡ Generate</a>
+    <a class="nav-link active" href="dashboard.html">📊 Dashboard</a>
+    <div class="nav-streak" id="navStreak" style="display:none">🔥 <span id="streakNum">0</span></div>
+    <div class="nav-user">
+      <div class="nav-avatar" id="navAvatar">?</div>
+      <span class="nav-name" id="navName">—</span>
+    </div>
+    <button class="nav-link" onclick="auth.signOut().then(()=>window.location.href='index.html')" style="color:var(--muted)">Sign out</button>
+  </div>
+</nav>
+
+<main>
+  <!-- Welcome -->
+  <div class="welcome">
+    <div>
+      <h1>Welcome back, <span id="displayName">Student</span> 👋</h1>
+      <p id="welcomeSub">Loading your progress…</p>
+    </div>
+    <a class="btn btn-primary" href="app.html">⚡ New Test</a>
+  </div>
+
+  <!-- Streak Card -->
+  <div class="streak-card">
+    <div class="streak-fire">🔥</div>
+    <div class="streak-info">
+      <h2><span id="streakBig">—</span> day streak</h2>
+      <p id="streakMsg">Keep going!</p>
+      <div class="streak-sub" id="streakSub">—</div>
+    </div>
+    <div class="streak-badges">
+      <div class="streak-badge">🏆 Best: <span id="longestStreak">—</span> days</div>
+      <div class="streak-badge">📅 Last active: <span id="lastActive">—</span></div>
+    </div>
+  </div>
+
+  <!-- Stats Row -->
+  <div class="stats-row">
+    <div class="stat-card acc">
+      <div class="stat-val" id="statAcc">—</div>
+      <div class="stat-lbl">Overall Accuracy</div>
+      <div class="stat-sub" id="statAccSub">—</div>
+    </div>
+    <div class="stat-card tests">
+      <div class="stat-val" id="statTests">—</div>
+      <div class="stat-lbl">Tests Taken</div>
+      <div class="stat-sub">MCQ attempts with scores</div>
+    </div>
+    <div class="stat-card qs">
+      <div class="stat-val" id="statQs">—</div>
+      <div class="stat-lbl">Questions Answered</div>
+      <div class="stat-sub" id="statQsSub">—</div>
+    </div>
+  </div>
+
+  <!-- Subject Filter Bar -->
+  <div class="subject-bar" id="subjectBar" style="display:none">
+    <span class="subject-bar-lbl">Subject:</span>
+    <div class="subject-chips" id="subjectChips"></div>
+  </div>
+
+  <!-- 2-col grid -->
+  <div class="dash-grid">
+
+    <!-- Weak Topics + Feedback -->
+    <div class="panel">
+      <div class="panel-title"><span>📉</span> Areas to Improve</div>
+      <div id="weakTopicsWrap">
+        <div class="empty"><span class="e-icon">📚</span>Complete MCQ tests to see topic insights</div>
+      </div>
+      <div class="feedback-box hidden" id="feedbackBox"></div>
+    </div>
+
+    <!-- Strong Topics -->
+    <div class="panel">
+      <div class="panel-title"><span>💪</span> Your Strengths</div>
+      <div id="strongTopicsWrap">
+        <div class="empty"><span class="e-icon">🎯</span>Your strong topics will appear here</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Score Trend (Full Width) -->
+  <div class="panel" style="margin-bottom:24px">
+    <div class="panel-title"><span>📈</span> Score Trend (last 10)</div>
+    <div class="chart-wrap" id="chartWrap">
+      <div class="chart-empty">No MCQ scores yet. Take a quiz!</div>
+    </div>
+  </div>
+
+  <!-- Recent tests (Full Width) -->
+  <div class="panel" style="margin-bottom:28px">
+    <div class="panel-title"><span>📚</span> Test History</div>
+    <div class="history-list" id="historyList">
+      <div class="empty"><span class="e-icon">🗂️</span>No tests yet. Generate your first test!</div>
+    </div>
+  </div>
+
+</main>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-txt">Loading your dashboard…</div>
+</div>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+let currentUser = null;
+
+auth.onAuthStateChanged(async user => {
+  if (!user) { window.location.href = 'index.html'; return; }
+  currentUser = user;
+  renderNavUser(user);
+  document.getElementById('loadingOverlay').classList.add('show');
+  try { await loadDashboard(user); }
+  catch(e) { console.error(e); toast('Failed to load some data.','error'); }
+  finally { document.getElementById('loadingOverlay').classList.remove('show'); }
+});
+
+function renderNavUser(user) {
+  const av = document.getElementById('navAvatar');
+  const initial = (user.displayName || user.email || 'U')[0].toUpperCase();
+  if (user.photoURL) {
+    av.innerHTML = `<img src="${user.photoURL}" alt="${initial}" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;" onerror="this.remove(); document.getElementById('navAvatar').textContent='${initial}';">`;
+  } else {
+    av.textContent = initial;
+  }
+  const name = user.displayName || user.email?.split('@')[0] || 'Student';
+  document.getElementById('navName').textContent = name;
+  document.getElementById('displayName').textContent = name.split(' ')[0];
+}
+
+let allCompiledTopics = {};
+let availableSubjects = [];
+let currentActiveSubject = 'all';
+
+async function loadDashboard(user) {
+  console.log("LOADING DASHBOARD");
+
+  const profile = await getUserProfile(user.uid);
+  const analytics = await getUserAnalytics(user.uid);
+  const tests = await getUserTests(user.uid, 50);
+
+  renderStreak(profile);
+  renderStats(profile);
+
+  // Compile full topic performance by inspecting all user tests (both past and current)
+  allCompiledTopics = compileTopicPerformance(tests, analytics.topicPerformance || {});
+
+  // Extract all unique subjects
+  const subjectSet = new Set();
+  Object.values(allCompiledTopics).forEach(t => {
+    if (t.subject && t.subject !== 'General') subjectSet.add(t.subject);
+  });
+  availableSubjects = Array.from(subjectSet).sort();
+
+  renderSubjectChips();
+  renderTopics(allCompiledTopics, currentActiveSubject);
+  renderChart(analytics.recentScores || []);
+  renderHistory(tests);
+}
+
+function compileTopicPerformance(tests, storedPerf) {
+  const perf = {};
+
+  // 1. Parse all attempted MCQ tests directly from Firestore (source of truth)
+  if (Array.isArray(tests) && tests.length > 0) {
+    tests.forEach(test => {
+      if (test.type !== 'mcq' || !test.attempted || !Array.isArray(test.questions)) return;
+
+      const testSubject = (test.subject && test.subject !== 'General')
+        ? test.subject
+        : inferSubjectFromTopicOrTitle(test.title);
+
+      test.questions.forEach((q, i) => {
+        let sub = q.subject;
+        if (!sub || sub === 'General') {
+          sub = inferSubjectFromTopicOrTitle(q.topic);
+          if (!sub || sub === 'General') {
+            sub = (testSubject && testSubject !== 'General') ? testSubject : 'General';
+          }
+        }
+        if (!sub || sub === 'General') {
+          sub = inferSubjectFromTopicOrTitle(test.title) || 'General';
+        }
+
+        const top = q.topic || 'General';
+        const fullKey = `${sub} • ${top}`;
+        if (!perf[fullKey]) {
+          perf[fullKey] = { subject: sub, cleanTopic: top, correct: 0, total: 0 };
+        }
+        perf[fullKey].total += 1;
+        if (test.userAnswers && test.userAnswers[i] === q.answer) {
+          perf[fullKey].correct += 1;
+        }
+      });
+    });
+  }
+
+  // 2. Incorporate stored analytics for any topics not already parsed from tests
+  for (const [key, data] of Object.entries(storedPerf || {})) {
+    const cleanTopic = data.cleanTopic || (key.includes('•') ? key.split('•')[1].trim() : key);
+    let sub = data.subject;
+    if (!sub || sub === 'General') {
+      sub = inferSubjectFromTopicOrTitle(key);
+      if (!sub || sub === 'General') {
+        sub = inferSubjectFromTopicOrTitle(cleanTopic);
+      }
+    }
+    const fullKey = `${sub} • ${cleanTopic}`;
+
+    // Only merge if not already present
+    const existingKey = Object.keys(perf).find(k => k.endsWith(`• ${cleanTopic}`));
+    if (!existingKey) {
+      perf[fullKey] = {
+        subject: sub,
+        cleanTopic,
+        correct: data.correct || 0,
+        total: data.total || 0
+      };
+    }
+  }
+
+  return perf;
+}
+
+function renderSubjectChips() {
+  const bar = document.getElementById('subjectBar');
+  const chips = document.getElementById('subjectChips');
+  if (!availableSubjects.length) {
+    bar.style.display = 'none';
+    return;
+  }
+  bar.style.display = 'flex';
+  const totalCount = Object.keys(allCompiledTopics).length;
+  const allHtml = `<button class="subj-chip ${currentActiveSubject==='all'?'active':''}" onclick="filterSubject('all')">🌐 All Subjects (${totalCount})</button>`;
+  const subjectBtns = availableSubjects.map(sub => {
+    const count = Object.values(allCompiledTopics).filter(t => t.subject === sub).length;
+    return `<button class="subj-chip ${currentActiveSubject===sub?'active':''}" onclick="filterSubject('${esc(sub)}')">${esc(sub)} (${count})</button>`;
+  }).join('');
+  chips.innerHTML = allHtml + subjectBtns;
+}
+
+function filterSubject(sub) {
+  currentActiveSubject = sub;
+  renderSubjectChips();
+  renderTopics(allCompiledTopics, currentActiveSubject);
+}
+
+/* ── Streak ── */
+function renderStreak(p) {
+  if (!p) return;
+  const streak = p.currentStreak || 0;
+  document.getElementById('streakBig').textContent = streak;
+  document.getElementById('streakNum').textContent  = streak;
+  if (streak > 0) { document.getElementById('navStreak').style.display = 'flex'; }
+
+  const msgs = {
+    0: "Start your streak today! 🚀",
+    1: "You started! Come back tomorrow. 🌱",
+    3: "3 days strong! Keep it up 💪",
+    7: "A whole week! You're on fire! 🔥",
+    14: "Two weeks! Incredible dedication 🏅",
+    30: "30 days! You're a legend 🏆"
+  };
+  const key = [30,14,7,3,1,0].find(k => streak >= k);
+  document.getElementById('streakMsg').textContent  = msgs[key] || `${streak} days in a row! 🔥`;
+  document.getElementById('streakSub').textContent  = `Don't break the chain — study something today`;
+  document.getElementById('longestStreak').textContent = p.longestStreak || streak;
+  document.getElementById('lastActive').textContent    = p.lastActiveDate || '—';
+
+  const sub = streak === 0
+    ? 'Generate a test to start your streak'
+    : `Active since ${p.lastActiveDate || '—'}`;
+  document.getElementById('welcomeSub').textContent = sub;
+}
+
+/* ── Stats ── */
+function renderStats(p) {
+  if (!p) return;
+  const acc   = overallAccuracy(p);
+  const tests = p.totalTests || 0;
+  const qs    = p.totalQuestionsAnswered || 0;
+  const corr  = p.totalCorrect || 0;
+
+  document.getElementById('statAcc').textContent    = `${acc}%`;
+  document.getElementById('statAccSub').textContent = `${corr} correct of ${qs} answered`;
+  document.getElementById('statTests').textContent  = tests;
+  document.getElementById('statQs').textContent     = qs;
+  document.getElementById('statQsSub').textContent  = `${corr} correct answers total`;
+}
+
+function formatSubjTag(subject) {
+  if (!subject || subject === 'General') return '';
+  const abbrev = {
+    'Machine Learning': 'ML',
+    'Artificial Intelligence': 'AI',
+    'Computer Science': 'CS',
+    'English': 'ENG',
+    'Mathematics': 'MATH',
+    'Physics': 'PHYS',
+    'Chemistry': 'CHEM',
+    'Biology': 'BIO',
+    'History': 'HIST'
+  }[subject] || (subject.length > 7 ? subject.slice(0, 5) + '.' : subject);
+
+  let cls = 'subj-gen';
+  if (/machine|ml|ai/i.test(subject)) cls = 'subj-ml';
+  else if (/english|eng|grammar/i.test(subject)) cls = 'subj-eng';
+  else if (/math/i.test(subject)) cls = 'subj-math';
+  else if (/physics|phys|chem|bio/i.test(subject)) cls = 'subj-sci';
+
+  return `<span class="subj-tag ${cls}" title="${esc(subject)}">${esc(abbrev)}</span>`;
+}
+
+/* ── Topics ── */
+function renderTopics(topicPerf, subjectFilter = 'all') {
+  const weak   = getWeakTopics(topicPerf, subjectFilter);
+  const strong = getStrongTopics(topicPerf, subjectFilter);
+
+  // Weak
+  const weakWrap = document.getElementById('weakTopicsWrap');
+  if (weak.length) {
+    weakWrap.innerHTML = weak.map(t => {
+      const showTag = subjectFilter === 'all' && t.subject && t.subject !== 'General';
+      const tagHtml = showTag ? formatSubjTag(t.subject) : '';
+      return `
+        <div class="topic-row weak">
+          <div class="topic-label" title="${esc(t.subject)} - ${esc(t.topic)}">${tagHtml}<span class="topic-name">${esc(t.topic)}</span></div>
+          <div class="topic-bar-wrap"><div class="topic-bar" style="width:${t.accuracy}%"></div></div>
+          <div class="topic-pct">${t.accuracy}%</div>
+        </div>`;
+    }).join('');
+
+    // Smart feedback (only for weak topics)
+    const fb = document.getElementById('feedbackBox');
+    fb.classList.remove('hidden');
+    const msgs = weak.slice(0, 3).map(t => {
+      const subTag = (subjectFilter === 'all' && t.subject && t.subject !== 'General')
+        ? formatSubjTag(t.subject) + ' '
+        : '';
+      if (t.accuracy < 40) return `⚠️ ${subTag}<strong>${esc(t.topic)}</strong> — only ${t.accuracy}% accuracy. Revisit the basics.`;
+      if (t.accuracy < 60) return `📖 ${subTag}<strong>${esc(t.topic)}</strong> — ${t.accuracy}%. Practice more questions on this topic.`;
+      return `🔄 ${subTag}<strong>${esc(t.topic)}</strong> — ${t.accuracy}%. A few more revisions and you'll master this.`;
+    });
+    fb.innerHTML = msgs.join('<br>');
+  } else {
+    const msg = subjectFilter === 'all'
+      ? '🎉 Great job! No weak areas below 75% accuracy.'
+      : `🎉 Great job! No weak areas in ${esc(subjectFilter)}. All topics above 75%!`;
+    weakWrap.innerHTML = `<div class="empty"><span class="e-icon">✨</span>${msg}</div>`;
+    document.getElementById('feedbackBox').classList.add('hidden');
+  }
+
+  // Strong
+  const strongWrap = document.getElementById('strongTopicsWrap');
+  if (strong.length) {
+    strongWrap.innerHTML = strong.map(t => {
+      const showTag = subjectFilter === 'all' && t.subject && t.subject !== 'General';
+      const tagHtml = showTag ? formatSubjTag(t.subject) : '';
+      return `
+        <div class="topic-row strong">
+          <div class="topic-label" title="${esc(t.subject)} - ${esc(t.topic)}">${tagHtml}<span class="topic-name">${esc(t.topic)}</span></div>
+          <div class="topic-bar-wrap"><div class="topic-bar" style="width:${t.accuracy}%"></div></div>
+          <div class="topic-pct">${t.accuracy}%</div>
+        </div>`;
+    }).join('');
+  } else {
+    const msg = subjectFilter === 'all'
+      ? 'Complete MCQ tests with 60%+ score to see your strengths'
+      : `Complete more tests in ${esc(subjectFilter)} with 60%+ score to build your strengths`;
+    strongWrap.innerHTML = `<div class="empty"><span class="e-icon">🎯</span>${msg}</div>`;
+  }
+}
+
+/* ── Score Chart ── */
+function renderChart(scores) {
+  const wrap = document.getElementById('chartWrap');
+  const recent = scores.slice(0, 10).reverse(); // oldest first
+  if (!recent.length) { wrap.innerHTML = '<div class="chart-empty">No MCQ scores yet. Take a quiz!</div>'; return; }
+
+  const max = Math.max(...recent.map(s => s.score), 1);
+  const bars = recent.map(s => {
+    const h   = Math.max(6, Math.round((s.score / 100) * 86));
+    const col = s.score >= 75 ? 'var(--green)' : s.score >= 50 ? 'var(--amber)' : 'var(--tiger)';
+    const d   = s.date ? s.date.slice(5) : ''; // MM-DD
+    return `<div class="chart-bar-wrap">
+      <div class="chart-val" style="color:${col}">${s.score}%</div>
+      <div class="chart-bar" style="height:${h}px;background:${col}"></div>
+      <div class="chart-date">${d}</div>
+    </div>`;
+  });
+  wrap.innerHTML = `<div class="chart-bars">${bars.join('')}</div>`;
+}
+
+/* ── History ── */
+function renderHistory(tests) {
+  const wrap = document.getElementById('historyList');
+  if (!tests.length) {
+    wrap.innerHTML = '<div class="empty"><span class="e-icon">🗂️</span>No tests yet. Generate your first test!</div>';
+    return;
+  }
+  const icons = { mcq:'🎯', flashcard:'🃏', long:'📝' };
+  wrap.innerHTML = tests.map(t => {
+    const score = t.scorePercent != null ? t.scorePercent : null;
+    let scoreHtml = '<span class="hist-score na">—</span>';
+    if (score != null) {
+      const cls = score >= 75 ? 'good' : score >= 50 ? 'mid' : 'bad';
+      scoreHtml = `<span class="hist-score ${cls}">${score}%</span>`;
+    }
+    const date = t.createdAt?.toDate ? t.createdAt.toDate().toLocaleDateString('en-IN',{day:'numeric',month:'short'}) : '—';
+    return `<div class="hist-item">
+      <div class="hist-icon ${t.type}">${icons[t.type]||'📄'}</div>
+      <div class="hist-info">
+        <div class="hist-title">${esc(t.title||'Untitled')}</div>
+        <div class="hist-meta">${t.questionCount||0} Qs · ${t.difficulty||'Medium'} · ${date}</div>
+      </div>
+      <span class="hist-tag ${t.type}">${t.type?.toUpperCase()}</span>
+      ${scoreHtml}
+      <button class="delete-btn" onclick="delTest('${t.id}',this)" title="Delete">🗑</button>
+    </div>`;
+  }).join('');
+}
+
+async function delTest(id, btn) {
+  if (!confirm('Delete this test?')) return;
+  btn.closest('.hist-item').style.opacity = '.4';
+  try {
+    await deleteTest(id);
+    btn.closest('.hist-item').remove();
+    toast('Test deleted','success');
+  } catch(e) {
+    btn.closest('.hist-item').style.opacity = '';
+    toast('Could not delete','error');
+  }
+}
+
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function toast(msg, type='info') {
+  const wrap = document.getElementById('toastWrap');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(()=>el.remove(),3500);
+}
+</script>
+</body>
+</html>
