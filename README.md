@@ -72,8 +72,8 @@ testyAI/
 ## 🚀 Quick Start
 
 ### Prerequisites
-- [Node.js](https://nodejs.org/) (v18 or higher recommended)
-- A [Groq Cloud API Key](https://console.groq.com/) (free tier available)
+- [Node.js](https://nodejs.org/)
+- A [Groq Cloud API Key](https://console.groq.com/)
 - A [Firebase Project](https://console.firebase.google.com/) with **Authentication** (Google & Email/Password) and **Firestore** enabled.
 
 ### 1. Clone Repository
