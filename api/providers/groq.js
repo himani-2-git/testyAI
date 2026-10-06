@@ -2,12 +2,12 @@
 //  api/providers/groq.js
 //  Groq provider — PRIMARY
 //
-//  Uses llama-3.3-70b-versatile which supports structured-output
-//  mode (response_format.type = "json_schema") on Groq's API.
-//  This guarantees the model emits JSON matching our schema,
-//  not just "tries" to based on prompt instructions.
+//  Uses openai/gpt-oss-120b (or qwen/qwen3.8-27b for fallback) with
+//  response_format: { type: "json_object" } (JSON mode) on Groq's API.
+//  Schema conformance is validated server-side using Ajv in
+//  api/schemas.js after parsing.
 //
-//  Docs: https://console.groq.com/docs/structured-outputs
+//  Docs: https://console.groq.com/docs/text-chat
 // ============================================================
 
 const GROQ_BASE_URL = 'https://api.groq.com/openai/v1/chat/completions';
@@ -61,7 +61,7 @@ async function callGroq(systemPrompt, userPrompt, apiKey, model) {
   const content = data?.choices?.[0]?.message?.content;
   if (!content) throw new Error('Groq returned empty content');
 
-  return JSON.parse(content); // Safe: structured-output guarantees valid JSON
+  return JSON.parse(content); // Parsed JSON; validated with Ajv in api/schemas.js
 }
 
 module.exports = { callGroq };

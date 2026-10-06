@@ -9,6 +9,7 @@
 
 const { callGroq } = require('./groq');
 const { callCerebras } = require('./cerebras');
+const { validate } = require('../schemas');
 
 // ── Provider registry ──
 const PROVIDERS = [
@@ -35,6 +36,7 @@ if (process.env.CEREBRAS_API_KEY) {
 /**
  * Calls providers in order. Falls back on:
  *   - Rate-limit errors (429)
+ *   - Schema validation failures
  *   - Any thrown error from the current provider
  *
  * @param {string} systemPrompt
@@ -49,6 +51,13 @@ async function callWithFallback(systemPrompt, userPrompt, type) {
     try {
       console.log(`[AI] Trying provider: ${provider.name}`);
       const result = await provider.call(systemPrompt, userPrompt, type);
+
+      // Validate schema on model response; on failure, fall through to next provider
+      const { valid, error: validationError } = validate(type, result);
+      if (!valid) {
+        throw new Error(`Schema validation failed: ${validationError}`);
+      }
+
       console.log(`[AI] Success with provider: ${provider.name}`);
       return { result, provider: provider.name };
     } catch (err) {

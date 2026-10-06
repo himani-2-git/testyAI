@@ -88,33 +88,40 @@ const LONG_SCHEMA = {
   additionalProperties: true
 };
 
+const Ajv = require('ajv');
+const ajv = new Ajv({ allErrors: true });
+
 const SCHEMAS = { flashcard: FLASHCARD_SCHEMA, mcq: MCQ_SCHEMA, long: LONG_SCHEMA };
 
-// ── Lightweight validator (no external deps) ──
-// Validates the parsed object against our schema rules.
-function validate(type, parsed) {
-  const schema = SCHEMAS[type];
-  if (!schema) return { valid: false, error: `Unknown type: ${type}` };
+const COMPILED_VALIDATORS = {
+  flashcard: ajv.compile(FLASHCARD_SCHEMA),
+  mcq: ajv.compile(MCQ_SCHEMA),
+  long: ajv.compile(LONG_SCHEMA)
+};
 
-  if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.questions)) {
-    return { valid: false, error: 'Response missing "questions" array' };
+// ── Validator using compiled Ajv schemas + type-specific checks ──
+function validate(type, parsed) {
+  const validator = COMPILED_VALIDATORS[type];
+  if (!validator) return { valid: false, error: `Unknown type: ${type}` };
+
+  if (!parsed || typeof parsed !== 'object') {
+    return { valid: false, error: 'Response must be a JSON object' };
   }
 
-  const items = parsed.questions;
-  if (!items.length) return { valid: false, error: 'Empty questions array returned' };
+  // 1. Validate against compiled Ajv JSON schema
+  const isValid = validator(parsed);
+  if (!isValid) {
+    const errorMsg = validator.errors
+      ? validator.errors.map(e => `${e.instancePath || 'root'} ${e.message}`).join(', ')
+      : 'Schema validation failed';
+    return { valid: false, error: errorMsg };
+  }
 
+  // 2. Type-specific checks (e.g. MCQ must have exactly 4 options)
+  const items = parsed.questions;
   for (let i = 0; i < items.length; i++) {
     const q = items[i];
-    const itemSchema = schema.properties.questions.items;
 
-    // Check required fields
-    for (const field of itemSchema.required) {
-      if (q[field] === undefined || q[field] === null || q[field] === '') {
-        return { valid: false, error: `Question ${i + 1} missing field: "${field}"` };
-      }
-    }
-
-    // Type-specific checks
     if (type === 'mcq') {
       if (!Array.isArray(q.options) || q.options.length !== 4) {
         return { valid: false, error: `Question ${i + 1}: options must be exactly 4 strings` };

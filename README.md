@@ -31,15 +31,18 @@ A dedicated analytics dashboard tracks mastery, identifies weak areas, monitors 
 - **Subject Categorization**: Automatic topic clustering and subject tagging (`Machine Learning`, `English`, `Mathematics`, `Sciences`).
 - **Interactive Subject Filter**: Filter topics and scores with live tab counts (`All Subjects`, `Machine Learning`, `English`).
 - **Targeted Insights**:
-  - **📉 Areas to Improve**: Highlights topics with <75% accuracy, complete with actionable recommendations.
-  - **💪 Your Strengths**: Recognizes topics with ≥60% accuracy.
+  - **📉 Areas to Improve**: Displays up to 6 topics with <75% accuracy sorted ascending (lowest first), accompanied by smart recommendations.
+  - **💪 Your Strengths**: Displays up to 6 top-performing topics qualifying at ≥60% accuracy sorted descending (highest first).
   - **Compact Subject Pills**: Visual badges (`ML`, `ENG`, `MATH`) with pastel color accents to maximize topic readability without text truncation.
 - **🔥 Study Streaks & Score Trends**: Consecutive study streak tracking with motivational badges and a 10-quiz score progression chart.
 
-### 4. 🔒 Enterprise-Grade AI Architecture
+### 4. 🔒 Server-Side AI Pipeline & Multi-Provider Fallback
 - **Server-Side Security**: API keys live exclusively in `.env` on the Node/Express backend — never exposed to the client browser.
-- **Provider Abstraction & Fallback**: Fast Groq inference (`openai/gpt-oss-120b`) with seamless fallback (`qwen/qwen3.8-27b`).
-- **JSON Schema Validation**: Server-enforced output schemas guarantee reliable, bug-free question generation.
+- **Multi-Provider Fallback Chain**: Sequential provider execution orchestrated in `api/providers/index.js`:
+  1. **Groq Primary**: `openai/gpt-oss-120b` (using `GROQ_API_KEY`).
+  2. **Groq Secondary**: `qwen/qwen3.8-27b` (using `GROQ_API_KEY_2` if set, otherwise `GROQ_API_KEY`).
+  3. **Cerebras Tertiary**: `llama-3.3-70b` (only active when `CEREBRAS_API_KEY` is provided).
+- **Ajv JSON Schema Validation**: Model outputs are compiled and validated server-side against strict JSON schemas with Ajv. If a provider's output fails schema validation (e.g. incorrect option count or missing fields) or hits rate limits (429), the pipeline automatically falls through to the next provider.
 
 ---
 
@@ -49,10 +52,12 @@ A dedicated analytics dashboard tracks mastery, identifies weak areas, monitors 
 testyAI/
 ├── api/
 │   ├── providers/
-│   │   └── groq.js          # Groq primary & fallback inference handler
+│   │   ├── cerebras.js      # Cerebras fallback provider (llama-3.3-70b)
+│   │   ├── groq.js          # Groq provider handler
+│   │   └── index.js         # Provider registry & automatic fallback chain
 │   ├── generate.js          # Express route handler (/api/generate)
 │   ├── prompts.js           # Multi-document & subject-aware system prompts
-│   └── schemas.js           # JSON schemas & response validation
+│   └── schemas.js           # JSON schemas & Ajv response validation
 ├── css/
 │   └── shared.css           # Global typography, color tokens & base design
 ├── js/
@@ -62,6 +67,7 @@ testyAI/
 ├── .gitignore               # Excludes node_modules, .env, and logs
 ├── app.html                 # Test generation, multi-file upload & quiz interface
 ├── dashboard.html           # Progress dashboard, streak tracker & topic analytics
+├── firestore.rules          # Security rules restricting users to their own data
 ├── index.html               # Authentication landing page (Google / Email Login)
 ├── package.json             # Node dependencies and npm scripts
 └── server.js                # Express web server (API + static SPA serving)
@@ -74,6 +80,7 @@ testyAI/
 ### Prerequisites
 - [Node.js](https://nodejs.org/)
 - A [Groq Cloud API Key](https://console.groq.com/)
+- Optional: A secondary Groq API key or [Cerebras API Key](https://inference.cerebras.ai/) for fallbacks
 - A [Firebase Project](https://console.firebase.google.com/) with **Authentication** (Google & Email/Password) and **Firestore** enabled.
 
 ### 1. Clone Repository
@@ -94,7 +101,9 @@ cp .env.example .env
 ```
 Open `.env` and fill in your API credentials:
 ```ini
-GROQ_API_KEY=gsk_your_groq_api_key_here
+GROQ_API_KEY=gsk_your_primary_groq_api_key_here
+GROQ_API_KEY_2=your_secondary_groq_key_optional
+CEREBRAS_API_KEY=your_cerebras_key_optional
 PORT=8080
 ```
 
@@ -111,7 +120,14 @@ const firebaseConfig = {
 };
 ```
 
-### 5. Launch the Server
+### 5. Firebase Security Rules (`firestore.rules`)
+Deploy or apply `firestore.rules` to restrict data access so that users can only read and write their own documents:
+```bash
+firebase deploy --only firestore:rules
+```
+*(Alternatively, copy and paste the contents of `firestore.rules` into the **Firestore Database** → **Rules** tab in the Firebase Console).*
+
+### 6. Launch the Server
 ```bash
 npm start
 ```
