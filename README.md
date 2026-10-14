@@ -155,12 +155,8 @@ testyAI/
 │   ├── prompts.js               # Subject-aware system prompts & format contracts
 │   └── schemas.js               # JSON Schemas & compiled Ajv response validation
 ├── brag-output/
-│   ├── composition/             # HyperFrames video composition (HTML/CSS/GSAP)
-│   ├── brag-plan.md             # Launch video storyboard & audio timing plan
-│   ├── composition-brief.md     # Creative brief for video generation
 │   ├── brag.jpg                 # High-resolution poster thumbnail
-│   ├── brag.mp4                 # Rendered 20.0s 1080p product launch video
-│   └── share-copy.txt           # Launch social media caption
+│   └── brag.mp4                 # Rendered 20.0s 1080p product launch video
 ├── css/
 │   └── shared.css               # Global theme tokens, typography, and notebook grid
 ├── js/
