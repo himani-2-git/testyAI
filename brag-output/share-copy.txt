@@ -1,0 +1,1 @@
+Don't just re-read your lecture notes. testyAI turns multi-file PDFs and study materials into active-recall quizzes, 3D flashcards, and diagnostic mastery analytics in seconds.

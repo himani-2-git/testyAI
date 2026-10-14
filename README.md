@@ -1,91 +1,205 @@
 # ✏️ testyAI — AI-Powered Study & Exam Prep Platform
 
+> Transform lecture notes, slides, and multi-file PDFs into active-recall flashcards, auto-graded quizzes, and diagnostic mastery analytics in seconds.
+
 [![Live Demo](https://img.shields.io/badge/Live_Demo-testyai.onrender.com-00c7b7?style=flat-square&logo=render&logoColor=white)](https://testyai.onrender.com)
+[![GitHub Repository](https://img.shields.io/badge/GitHub-himani--2--git%2FtestyAI-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/himani-2-git/testyAI)
 [![Node.js](https://img.shields.io/badge/Node.js-v18+-68a063?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![Express](https://img.shields.io/badge/Express-4.19-000000?style=flat-square&logo=express&logoColor=white)](https://expressjs.com/)
 [![Firebase](https://img.shields.io/badge/Firebase-Auth%20%26%20Firestore-ffca28?style=flat-square&logo=firebase&logoColor=black)](https://firebase.google.com/)
-[![Groq](https://img.shields.io/badge/AI-Groq%20%7C%20Cerebras-f55036?style=flat-square)](https://groq.com/)
+[![AI Providers](https://img.shields.io/badge/AI-Groq%20%7C%20Cerebras-f55036?style=flat-square)](https://groq.com/)
+[![Ajv](https://img.shields.io/badge/Schema-Ajv%20Validated-23c4a2?style=flat-square)](https://ajv.js.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
 
-> 🚀 **Live Demo**: Try testyAI live at **[https://testyai.onrender.com](https://testyai.onrender.com)**
+---
 
-**testyAI** is an intelligent, full-stack active-recall study companion. Upload study notes or textbook chapters in any format (PDF, DOCX, TXT) — including multi-file uploads across different subjects — and testyAI instantly crafts structured flashcards, multiple-choice quizzes with explanations, and exam-style long-answer questions. 
+### 🔗 Quick Links
+- 🌐 **Live Web Application**: [https://testyai.onrender.com](https://testyai.onrender.com)
+- 📂 **Source Code Repository**: [https://github.com/himani-2-git/testyAI](https://github.com/himani-2-git/testyAI)
 
-A dedicated analytics dashboard tracks mastery, identifies weak areas, monitors streaks, and maps topic performance across distinct academic subjects.
+---
+
+## 🎬 Product Walkthrough
+
+<p align="center">
+  <a href="https://github.com/himani-2-git/testyAI/raw/main/brag-output/brag.mp4">
+    <img src="brag-output/brag.jpg" alt="testyAI 20-Second Product Walkthrough" width="100%" style="max-width: 800px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.12);" />
+  </a>
+  <br>
+  <em>⚡ <strong>20-Second Product Walkthrough</strong>: Multi-PDF document ingestion, interactive 3D flashcards, instant MCQ auto-grading, and diagnostic mastery analytics.</em>
+  <br>
+  <sub>▶️ Click the poster above to stream or download <a href="brag-output/brag.mp4"><code>brag.mp4</code></a> (1080p, 20s).</sub>
+</p>
+
+> 💡 **Tip for Native Inline Playback on GitHub**: GitHub renders native embedded video players in Markdown when MP4 files are attached via GitHub's asset CDN. To embed a playable player directly on your GitHub repo page: drag and drop `brag-output/brag.mp4` into any GitHub Issue or Release description, copy the generated URL (`https://github.com/user-attachments/assets/...`), and replace the link above.
+
+---
+
+## 📖 Overview & Problem Solved
+
+Passive re-reading of textbooks and lecture slides creates an **illusion of competence**: students feel familiar with material while reading, yet struggle to retrieve concepts during exams. Research in cognitive science consistently demonstrates that **active recall** and **spaced retrieval practice** produce superior retention and exam performance.
+
+**testyAI** bridges this gap. It turns passive study notes into an interactive, gamified testing engine:
+1. **Drop Any Study Material**: Upload lecture notes, chapter summaries, or multi-file PDFs spanning distinct subjects.
+2. **Generate Targeted Practice**: Instantly receive structured flashcards, multiple-choice quizzes with explanations, or long-form conceptual questions.
+3. **Diagnose Weak Spots**: View diagnostic mastery metrics that separate confirmed strengths from topics requiring urgent revision before exam day.
 
 ---
 
 ## 🌟 Key Features
 
-### 1. ⚡ Multi-Format Document Ingestion
-- **Drop & Go**: Upload **PDF**, **DOCX**, or **TXT** files.
-- **Multi-Document Support**: Upload multiple PDFs simultaneously (e.g., *Machine Learning Basics.pdf* and *English Grammar.pdf*). testyAI partitions documents, detects individual subjects, and creates a balanced exam spanning across all uploaded material.
-- **Client-Side Extraction**: Fast, browser-based extraction via [PDF.js](https://mozilla.github.io/pdf.js/) and [Mammoth.js](https://github.com/mwilliamson/mammoth.js).
+### 1. ⚡ Client-Side Multi-Format Document Ingestion
+- **Multi-File Uploads**: Ingest multiple documents simultaneously (e.g., *Machine_Learning_Lecture_04.pdf* alongside *Neural_Networks.pdf*).
+- **Format Flexibility**: Supports **PDF** (via PDF.js), **DOCX** (via Mammoth.js), and plain **TXT** files.
+- **Client-Side Privacy & Speed**: Text extraction executes entirely inside the user's browser, preventing slow file uploads and bandwidth overhead.
+- **Automatic Subject Partitioning**: The server-side pipeline automatically identifies academic domains (`Machine Learning`, `Mathematics`, `Sciences`, `English`) across uploaded materials.
 
-### 2. 🧠 3 Tailored Test Modes
-- **🃏 Flashcards**: Active recall flip cards with keyboard navigation (`Space` to flip, `Arrow Left/Right` to navigate, dot indicators).
-- **🎯 Multiple Choice Quizzes (MCQ)**: 4-option exam questions with instant grading, detailed explanations, and automatic score persistence to Cloud Firestore.
-- **📝 Long Answers**: Model exam solutions with numbered answer keys, expandable question cards, and quick hint bullets.
+### 2. 🧠 Three Active-Recall Practice Modes
+- **🃏 3D Interactive Flashcards**:
+  - Tactile 3D perspective flip cards with front question and verified back concept answer.
+  - Full keyboard shortcuts: `Space` or `Enter` to flip; `ArrowLeft` / `ArrowRight` to navigate between cards; card indicator dots.
+- **🎯 Multiple-Choice Quizzes (MCQ)**:
+  - 4-option test format with immediate color-coded answer validation upon selection.
+  - Detailed explanation drawer breaking down why the correct option is right.
+  - Automatically calculates percentage score, performance tier, and persists attempt history to Cloud Firestore.
+- **📝 Exam-Grade Long Answers**:
+  - Structured model exam solutions with numbered answer keys.
+  - Expandable accordion cards with key point checklists and hint bullets.
 
-### 3. 📊 Smart Mastery & Analytics Dashboard
-- **Subject Categorization**: Automatic topic clustering and subject tagging (`Machine Learning`, `English`, `Mathematics`, `Sciences`).
-- **Interactive Subject Filter**: Filter topics and scores with live tab counts (`All Subjects`, `Machine Learning`, `English`).
-- **Targeted Insights**:
-  - **📉 Areas to Improve**: Displays up to 6 topics with <75% accuracy sorted ascending (lowest first), accompanied by smart recommendations.
-  - **💪 Your Strengths**: Displays up to 6 top-performing topics qualifying at ≥60% accuracy sorted descending (highest first).
-  - **Compact Subject Pills**: Visual badges (`ML`, `ENG`, `MATH`) with pastel color accents to maximize topic readability without text truncation.
-- **🔥 Study Streaks & Score Trends**: Consecutive study streak tracking with motivational badges and a 10-quiz score progression chart.
+### 3. 📊 Diagnostic Mastery Dashboard & Streaks
+- **Dynamic Subject Filtering**: Switch between topic performance across all subjects or filter specifically by category (`Machine Learning`, `English`, `Mathematics`, etc.).
+- **Dual-Threshold Diagnostic Categories**:
+  - ⚠️ **Areas to Improve (<75%)**: Surfaces topics with sub-75% accuracy (sorted lowest first) to target critical knowledge gaps before exams.
+  - 🎯 **Your Strengths (≥60%)**: Highlights topics meeting or exceeding the 60% passing competency threshold (sorted highest first).
+  - *Design Note*: Topics with accuracy between 60% and 74% intentionally qualify for both lists. This reflects demonstrated baseline competency while continuing to signal room for full mastery before test day.
+- **🔥 Study Streak Tracking**: Consecutive daily study session counter with motivational badges.
+- **📈 10-Quiz Score Progression**: Historical score trend chart tracking accuracy across recent attempts.
 
-### 4. 🔒 Server-Side AI Pipeline & Multi-Provider Fallback
-- **Server-Side Security**: API keys live exclusively in `.env` on the Node/Express backend — never exposed to the client browser.
-- **Multi-Provider Fallback Chain**: Sequential provider execution orchestrated in `api/providers/index.js`:
-  1. **Groq Primary**: `openai/gpt-oss-120b` (using `GROQ_API_KEY`).
-  2. **Groq Secondary**: `qwen/qwen3.8-27b` (using `GROQ_API_KEY_2` if set, otherwise `GROQ_API_KEY`).
-  3. **Cerebras Tertiary**: `llama-3.3-70b` (only active when `CEREBRAS_API_KEY` is provided).
-- **Ajv JSON Schema Validation**: Model outputs are compiled and validated server-side against strict JSON schemas with Ajv. If a provider's output fails schema validation (e.g. incorrect option count or missing fields) or hits rate limits (429), the pipeline automatically falls through to the next provider.
+### 4. 🔒 Multi-Provider AI Fallback Pipeline & Ajv Validation
+- **Zero Client Credential Exposure**: AI vendor keys live exclusively in server-side environment variables — never delivered to the client.
+- **Sequential Fallback Architecture** (`api/providers/index.js`):
+  1. **Groq Primary**: `openai/gpt-oss-120b` (high-capacity reasoning via `GROQ_API_KEY`).
+  2. **Groq Secondary**: `qwen/qwen3.8-27b` (rapid fallback via `GROQ_API_KEY_2` or primary key).
+  3. **Cerebras Tertiary**: `llama-3.3-70b` (ultra-fast inference via `CEREBRAS_API_KEY`, active when configured).
+- **Strict JSON Schema Validation (Ajv)**:
+  - Every model response is compiled and validated against formal JSON Schemas using **Ajv**.
+  - Type-specific rules enforce structure (e.g., MCQs must contain exactly 4 options and valid answer keys).
+  - If a provider triggers rate limits (HTTP 429) or returns malformed JSON, the pipeline catches the error and falls through to the next provider.
 
 ---
 
-## 🏗️ Architecture & Project Structure
+## 🛠️ Technology Stack
+
+| Layer | Technologies | Purpose |
+|---|---|---|
+| **Frontend UI** | HTML5, CSS3, Vanilla JavaScript | Academic notebook paper theme, responsive layouts, 3D CSS transforms |
+| **Document Processing** | [PDF.js](https://mozilla.github.io/pdf.js/), [Mammoth.js](https://github.com/mwilliamson/mammoth.js) | In-browser PDF and DOCX text extraction |
+| **Backend / Runtime** | Node.js (v18+), Express 4.19 | REST API endpoints, SPA static routing, environment isolation |
+| **AI Inference** | [Groq](https://groq.com/), [Cerebras](https://cerebras.ai/) | High-speed LLM inference (`gpt-oss-120b`, `qwen3.8-27b`, `llama-3.3-70b`) |
+| **Validation** | [Ajv (Another JSON Schema Validator)](https://ajv.js.org/) | Compiles JSON Schemas to validate model outputs before client delivery |
+| **Database & Auth** | Google Firebase (Auth & Cloud Firestore) | Google/Email authentication, test results, topic performance, and streak persistence |
+| **Video Production** | [HyperFrames](https://hyperframes.heygen.com/), FFmpeg 9.0 | Automated 20s 1080p launch video and poster frame generation |
+
+---
+
+## 📐 Architecture & Project Structure
+
+### Data & Execution Flow
+
+```mermaid
+flowchart TD
+  subgraph Client ["Browser Client"]
+    UI["SPA User Interface\n(Notebook Theme)"]
+    Extractor["Client Extraction\n(PDF.js / Mammoth.js)"]
+    AuthClient["Firebase Auth & Firestore SDK"]
+  end
+
+  subgraph Server ["Node.js / Express Backend"]
+    Endpoint["POST /api/generate"]
+    Fallback["Provider Fallback Chain"]
+    Groq1["Groq: openai/gpt-oss-120b"]
+    Groq2["Groq: qwen/qwen3.8-27b"]
+    Cerebras["Cerebras: llama-3.3-70b (Optional)"]
+    AjvValidator["Ajv JSON Schema Validator"]
+  end
+
+  subgraph Cloud ["Cloud Services"]
+    Firestore[("Cloud Firestore\n(User Data & Test History)")]
+  end
+
+  UI --> Extractor
+  Extractor --> UI
+  UI -- "Extracted Text & Test Mode" --> Endpoint
+  Endpoint --> Fallback
+  Fallback --> Groq1
+  Groq1 -- "Fail / 429 / Invalid" --> Groq2
+  Groq2 -- "Fail / 429 / Invalid" --> Cerebras
+  Groq1 --> AjvValidator
+  Groq2 --> AjvValidator
+  Cerebras --> AjvValidator
+  AjvValidator -- "Validated JSON" --> UI
+  UI -- "Persist Quiz Results & Streaks" --> AuthClient
+  AuthClient --> Firestore
+```
+
+### Directory Structure
 
 ```
 testyAI/
 ├── api/
 │   ├── providers/
-│   │   ├── cerebras.js      # Cerebras fallback provider (llama-3.3-70b)
-│   │   ├── groq.js          # Groq provider handler
-│   │   └── index.js         # Provider registry & automatic fallback chain
-│   ├── generate.js          # Express route handler (/api/generate)
-│   ├── prompts.js           # Multi-document & subject-aware system prompts
-│   └── schemas.js           # JSON schemas & Ajv response validation
+│   │   ├── cerebras.js          # Cerebras inference provider (llama-3.3-70b)
+│   │   ├── groq.js              # Groq inference provider
+│   │   └── index.js             # Provider registry & automatic fallback chain
+│   ├── generate.js              # Express POST /api/generate route handler
+│   ├── prompts.js               # Subject-aware system prompts & format contracts
+│   └── schemas.js               # JSON Schemas & compiled Ajv response validation
+├── brag-output/
+│   ├── composition/             # HyperFrames video composition (HTML/CSS/GSAP)
+│   ├── brag-plan.md             # Launch video storyboard & audio timing plan
+│   ├── composition-brief.md     # Creative brief for video generation
+│   ├── brag.jpg                 # High-resolution poster thumbnail
+│   ├── brag.mp4                 # Rendered 20.0s 1080p product launch video
+│   └── share-copy.txt           # Launch social media caption
 ├── css/
-│   └── shared.css           # Global typography, color tokens & base design
+│   └── shared.css               # Global theme tokens, typography, and notebook grid
 ├── js/
-│   ├── config.js            # Firebase client credentials
-│   └── db.js                # Firestore CRUD, analytics compilation, streaks
-├── .env.example             # Template for API keys & server port
-├── .gitignore               # Excludes node_modules, .env, and logs
-├── app.html                 # Test generation, multi-file upload & quiz interface
-├── dashboard.html           # Progress dashboard, streak tracker & topic analytics
-├── firestore.rules          # Security rules restricting users to their own data
-├── index.html               # Authentication landing page (Google / Email Login)
-├── package.json             # Node dependencies and npm scripts
-└── server.js                # Express web server (API + static SPA serving)
+│   ├── config.js                # Firebase client initialization config
+│   └── db.js                    # Firestore CRUD, streak calculations, topic analytics
+├── .env.example                 # Environment configuration template
+├── .gitignore                   # Excludes node_modules, .env, and log files
+├── app.html                     # Study generator & active-recall testing interface
+├── dashboard.html               # Analytics dashboard, subject filters, and streak history
+├── firestore.rules              # Firestore security rules enforcing user data isolation
+├── index.html                   # Authentication landing page (Google & Email sign-in)
+├── package.json                 # Node dependencies and npm scripts
+└── server.js                    # Express web server (API + static SPA serving)
 ```
 
 ---
 
-## 🚀 Quick Start
+## 🖼️ Visual Preview
+
+<p align="center">
+  <img src="brag-output/brag.jpg" alt="testyAI Interface and Notebook Theme" width="100%" style="max-width: 800px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.12);" />
+  <br>
+  <em>testyAI active-recall interface: Paper-grid theme, multi-PDF document ingestion, subject badges, and 3D flashcards.</em>
+</p>
+
+---
+
+## 💻 Local Setup & Environment Configuration
 
 ### Prerequisites
-- [Node.js](https://nodejs.org/)
+- [Node.js](https://nodejs.org/) (v18.0.0 or higher recommended)
+- [npm](https://www.npmjs.com/) (bundled with Node.js)
 - A [Groq Cloud API Key](https://console.groq.com/)
-- Optional: A secondary Groq API key or [Cerebras API Key](https://inference.cerebras.ai/) for fallbacks
-- A [Firebase Project](https://console.firebase.google.com/) with **Authentication** (Google & Email/Password) and **Firestore** enabled.
+- *(Optional)* A secondary Groq API key and/or a [Cerebras API Key](https://inference.cerebras.ai/) for multi-provider fallback
+- A [Firebase Project](https://console.firebase.google.com/) with **Authentication** and **Cloud Firestore** enabled
 
-### 1. Clone Repository
+### 1. Clone the Repository
 ```bash
-git clone https://github.com/<your-username>/testyAI.git
+git clone https://github.com/himani-2-git/testyAI.git
 cd testyAI
 ```
 
@@ -94,24 +208,53 @@ cd testyAI
 npm install
 ```
 
-### 3. Environment Configuration
-Create a `.env` file in the project root:
+### 3. Configure Environment Variables
+Create your local `.env` file from the provided template:
+
+**On Linux / macOS:**
 ```bash
 cp .env.example .env
 ```
-Open `.env` and fill in your API credentials:
+
+**On Windows (PowerShell):**
+```powershell
+Copy-Item .env.example .env
+```
+
+Open `.env` and supply your API keys:
 ```ini
 GROQ_API_KEY=gsk_your_primary_groq_api_key_here
-GROQ_API_KEY_2=your_secondary_groq_key_optional
-CEREBRAS_API_KEY=your_cerebras_key_optional
+GROQ_API_KEY_2=your_secondary_groq_api_key_here     # Optional
+CEREBRAS_API_KEY=your_cerebras_api_key_here         # Optional
 PORT=8080
 ```
 
-### 4. Firebase Setup (Client-Side)
-Ensure your Firebase Web App configuration in `js/config.js` points to your project:
+### 4. Start the Application
+For production runtime:
+```bash
+npm start
+```
+
+For development mode (auto-reloads on file changes using Node.js watch mode):
+```bash
+npm run dev
+```
+
+Open your browser and navigate to:
+```
+http://localhost:8080
+```
+
+---
+
+## 🔐 Firebase Setup & Security Configuration
+
+### Client Configuration (`js/config.js`)
+Frontend client credentials reside in `js/config.js`. Note that Firebase client config keys (`apiKey`, `authDomain`, `projectId`) are intended by design to be publicly accessible in client bundles:
+
 ```javascript
 const firebaseConfig = {
-  apiKey: "your-api-key",
+  apiKey: "AIzaSy...",
   authDomain: "your-project.firebaseapp.com",
   projectId: "your-project",
   storageBucket: "your-project.appspot.com",
@@ -120,43 +263,81 @@ const firebaseConfig = {
 };
 ```
 
-### 5. Firebase Security Rules (`firestore.rules`)
-Deploy or apply `firestore.rules` to restrict data access so that users can only read and write their own documents:
+### Security Rules (`firestore.rules`)
+Because client keys are public, **database security and user data isolation must be enforced via Cloud Firestore Security Rules**.
+
+testyAI includes a strict `firestore.rules` file restricting all database operations to authenticated owners:
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    match /users/{userId}      { allow read, write: if isOwner(userId); }
+    match /analytics/{userId}  { allow read, write: if isOwner(userId); }
+    match /tests/{testId} {
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow read, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid;
+    }
+    match /{document=**}       { allow read, write: if false; }
+  }
+}
+```
+
+#### Deploying Rules
+Deploy directly using the [Firebase CLI](https://firebase.google.com/docs/cli):
 ```bash
 firebase deploy --only firestore:rules
 ```
-*(Alternatively, copy and paste the contents of `firestore.rules` into the **Firestore Database** → **Rules** tab in the Firebase Console).*
-
-### 6. Launch the Server
-```bash
-npm start
-```
-Or for development with auto-reloading:
-```bash
-npm run dev
-```
-
-Visit **`http://localhost:8080`** in your browser.
+*(Alternatively, copy and paste the contents of `firestore.rules` into the **Firestore Database** → **Rules** tab in the Firebase Console and click **Publish**).*
 
 ---
 
-## 🎨 UI & Design Philosophy
-- **Modern Notebook Grid**: Background grid paper styling for a focused, academic study environment.
-- **Grotesque Typography**: Punchy headers with neon lime highlighters and warm peach accents.
-- **Micro-Interactions**: Smooth card flips, interactive answer states, and instant progress transitions.
+## 🚀 Deployment Notes
+
+### Deploying to Render
+1. Connect your GitHub repository to [Render](https://render.com/).
+2. Select **Web Service** with runtime **Node**.
+3. Configure build and start commands:
+   - **Build Command**: `npm install`
+   - **Start Command**: `npm start`
+4. In the **Environment** settings, add your `GROQ_API_KEY` (and optional `GROQ_API_KEY_2`, `CEREBRAS_API_KEY`).
+5. Ensure your production URL (e.g., `https://testyai.onrender.com`) is added to **Firebase Console** → **Authentication** → **Settings** → **Authorized Domains**.
+
+---
+
+## 🛠️ Troubleshooting
+
+- **AI Generation Fails ("All AI providers failed")**:
+  - Verify that `GROQ_API_KEY` is properly populated in your `.env` file.
+  - If you exceed rate limits on Groq's free tier, configure `GROQ_API_KEY_2` or `CEREBRAS_API_KEY` to enable seamless multi-provider fallback.
+- **Firebase Permission Denied**:
+  - Confirm you have deployed `firestore.rules` to your Firebase project.
+  - Check that Google Sign-In and Email/Password providers are enabled in Firebase Authentication.
+- **Large PDF Ingestion Delay**:
+  - Processing is performed client-side using PDF.js. Very large scanned PDFs (e.g., >50 MB of raw scanned images) may require additional browser memory. Text-based PDFs process in seconds.
 
 ---
 
 ## 🤝 Contributing
-Contributions, issues, and feature requests are welcome! Feel free to open a pull request or file an issue.
 
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
+Contributions, feedback, and issue reports are welcome!
+
+1. Fork the Project (`https://github.com/himani-2-git/testyAI/fork`)
+2. Create your Feature Branch (`git checkout -b feature/NewFeature`)
+3. Commit your Changes (`git commit -m 'feat: Add NewFeature'`)
+4. Push to the Branch (`git push origin feature/NewFeature`)
 5. Open a Pull Request
 
 ---
 
 ## 📄 License
-This project is open-source and licensed under the [MIT License](LICENSE).
+
+This project is licensed under the [MIT License](LICENSE).
