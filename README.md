@@ -23,15 +23,15 @@
 
 <p align="center">
   <a href="https://github.com/himani-2-git/testyAI/raw/main/brag-output/brag.mp4">
-    <img src="brag-output/brag.jpg" alt="testyAI 20-Second Product Walkthrough" width="100%" style="max-width: 800px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.12);" />
+    <img src="brag-output/brag.jpg" alt="testyAI Project Walkthrough" width="100%" style="max-width: 800px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.12);" />
   </a>
-  <br>
-  <em>⚡ <strong>20-Second Product Walkthrough</strong>: Multi-PDF document ingestion, interactive 3D flashcards, instant MCQ auto-grading, and diagnostic mastery analytics.</em>
-  <br>
-  <sub>▶️ Click the poster above to stream or download <a href="brag-output/brag.mp4"><code>brag.mp4</code></a> (1080p, 20s).</sub>
 </p>
 
-> 💡 **Tip for Native Inline Playback on GitHub**: GitHub renders native embedded video players in Markdown when MP4 files are attached via GitHub's asset CDN. To embed a playable player directly on your GitHub repo page: drag and drop `brag-output/brag.mp4` into any GitHub Issue or Release description, copy the generated URL (`https://github.com/user-attachments/assets/...`), and replace the link above.
+<p align="center">
+  <a href="https://github.com/himani-2-git/testyAI/raw/main/brag-output/brag.mp4">
+    <img src="https://img.shields.io/badge/▶_Watch_Demo-ff5714?style=for-the-badge" alt="Watch Demo" />
+  </a>
+</p>
 
 ---
 
@@ -98,7 +98,7 @@ Passive re-reading of textbooks and lecture slides creates an **illusion of comp
 | **AI Inference** | [Groq](https://groq.com/), [Cerebras](https://cerebras.ai/) | High-speed LLM inference (`gpt-oss-120b`, `qwen3.8-27b`, `llama-3.3-70b`) |
 | **Validation** | [Ajv (Another JSON Schema Validator)](https://ajv.js.org/) | Compiles JSON Schemas to validate model outputs before client delivery |
 | **Database & Auth** | Google Firebase (Auth & Cloud Firestore) | Google/Email authentication, test results, topic performance, and streak persistence |
-| **Video Production** | [HyperFrames](https://hyperframes.heygen.com/), FFmpeg 9.0 | Automated 20s 1080p launch video and poster frame generation |
+| **Showcase Media** | [HyperFrames](https://hyperframes.heygen.com/), FFmpeg | Automated product walkthrough video and poster generation |
 
 ---
 
@@ -156,7 +156,7 @@ testyAI/
 │   └── schemas.js               # JSON Schemas & compiled Ajv response validation
 ├── brag-output/
 │   ├── brag.jpg                 # High-resolution poster thumbnail
-│   └── brag.mp4                 # Rendered 20.0s 1080p product launch video
+│   └── brag.mp4                 # Product walkthrough video (1080p MP4)
 ├── css/
 │   └── shared.css               # Global theme tokens, typography, and notebook grid
 ├── js/
@@ -171,16 +171,6 @@ testyAI/
 ├── package.json                 # Node dependencies and npm scripts
 └── server.js                    # Express web server (API + static SPA serving)
 ```
-
----
-
-## 🖼️ Visual Preview
-
-<p align="center">
-  <img src="brag-output/brag.jpg" alt="testyAI Interface and Notebook Theme" width="100%" style="max-width: 800px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.12);" />
-  <br>
-  <em>testyAI active-recall interface: Paper-grid theme, multi-PDF document ingestion, subject badges, and 3D flashcards.</em>
-</p>
 
 ---
 
