@@ -22,9 +22,7 @@
 ## Project Walkthrough
 
 <p align="center">
-  <a href="https://github.com/himani-2-git/testyAI/raw/main/brag-output/brag.mp4">
-    <img src="brag-output/brag.jpg" alt="testyAI project walkthrough" width="100%" />
-  </a>
+  <img src="brag-output/brag.gif" alt="testyAI project walkthrough" width="100%" />
 </p>
 
 ---
@@ -149,6 +147,7 @@ testyAI/
 │   ├── prompts.js               # Subject-aware system prompts & format contracts
 │   └── schemas.js               # JSON Schemas & compiled Ajv response validation
 ├── brag-output/
+│   ├── brag.gif                 # Animated project walkthrough demo
 │   ├── brag.jpg                 # High-resolution poster thumbnail
 │   └── brag.mp4                 # Product walkthrough video (1080p MP4)
 ├── css/
