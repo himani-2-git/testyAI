@@ -19,17 +19,11 @@
 
 ---
 
-## 🎬 Product Walkthrough
+## Project Walkthrough
 
 <p align="center">
   <a href="https://github.com/himani-2-git/testyAI/raw/main/brag-output/brag.mp4">
-    <img src="brag-output/brag.jpg" alt="testyAI Project Walkthrough" width="100%" style="max-width: 800px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.12);" />
-  </a>
-</p>
-
-<p align="center">
-  <a href="https://github.com/himani-2-git/testyAI/raw/main/brag-output/brag.mp4">
-    <img src="https://img.shields.io/badge/▶_Watch_Demo-ff5714?style=for-the-badge" alt="Watch Demo" />
+    <img src="brag-output/brag.jpg" alt="testyAI project walkthrough" width="100%" />
   </a>
 </p>
 
