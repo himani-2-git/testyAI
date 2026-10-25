@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&display=block" rel="stylesheet">
 <link rel="stylesheet" href="css/shared.css">
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -15,6 +16,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <script src="js/config.js"></script>
+<script src="js/ui.js"></script>
 <script src="js/analytics.js"></script>
 <script src="js/db.js"></script>
 <style>
@@ -152,7 +154,7 @@ main { max-width: 920px; margin: 0 auto; padding: 24px 22px 100px; }
 .type-card[data-t="mcq"].sel          { border-color: var(--aqua); background: linear-gradient(135deg,var(--aqua-dim),var(--white)); }
 .type-card[data-t="long"]::before     { background: var(--amber); }
 .type-card[data-t="long"].sel         { border-color: var(--amber); background: linear-gradient(135deg,var(--amber-dim),var(--white)); }
-.type-emoji { font-size: 26px; display: block; margin-bottom: 9px; }
+.type-icon { font-size: 26px; display: block; margin-bottom: 9px; color: var(--ink2); }
 .type-card h4 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
 .type-card p  { font-size: 12px; color: var(--muted); line-height: 1.5; }
 .type-check {
@@ -273,18 +275,18 @@ main { max-width: 920px; margin: 0 auto; padding: 24px 22px 100px; }
 <!-- NAVBAR -->
 <nav class="navbar">
   <a class="nav-logo" href="app.html">
-    <div class="nav-logo-icon">✏️</div>
+    <div class="nav-logo-icon"><span class="ms" aria-hidden="true">edit</span></div>
     <div class="nav-logo-text">testy<span>AI</span></div>
   </a>
   <div class="nav-links">
-    <a class="nav-link active" href="app.html"><span class="nav-emoji">⚡</span> Generate</a>
-    <a class="nav-link" href="dashboard.html"><span class="nav-emoji">📊</span> Dashboard</a>
-    <div class="nav-streak" id="navStreak" style="display:none">🔥 <span id="streakNum">0</span></div>
+    <a class="nav-link active" href="app.html" title="Generate" aria-label="Generate"><span class="ms" aria-hidden="true">bolt</span><span class="nav-label">Generate</span></a>
+    <a class="nav-link" href="dashboard.html" title="Dashboard" aria-label="Dashboard"><span class="ms" aria-hidden="true">dashboard</span><span class="nav-label">Dashboard</span></a>
+    <div class="nav-streak" id="navStreak" style="display:none" title="Study streak"><span class="ms" aria-hidden="true">local_fire_department</span> <span id="streakNum">0</span></div>
     <div class="nav-user">
       <div class="nav-avatar" id="navAvatar">?</div>
       <span class="nav-name" id="navName">—</span>
     </div>
-    <button class="nav-link" onclick="signOut()" style="color:var(--muted)">Sign out</button>
+    <button class="nav-link" onclick="signOut()" style="color:var(--muted)" title="Sign out" aria-label="Sign out"><span class="ms" aria-hidden="true">logout</span><span class="nav-label">Sign out</span></button>
   </div>
 </nav>
 
@@ -318,17 +320,17 @@ main { max-width: 920px; margin: 0 auto; padding: 24px 22px 100px; }
       <h3>Drop your notes here</h3>
       <p>or click to browse your files</p>
       <div class="upload-chips">
-        <span class="chip">📄 PDF</span><span class="chip">📝 TXT</span><span class="chip">📘 DOCX</span>
+        <span class="chip"><span class="ms" aria-hidden="true">picture_as_pdf</span> PDF</span><span class="chip"><span class="ms" aria-hidden="true">text_snippet</span> TXT</span><span class="chip"><span class="ms" aria-hidden="true">description</span> DOCX</span>
       </div>
     </div>
     <input type="file" id="fileIn" accept=".pdf,.txt,.docx,.doc" multiple style="display:none" onchange="handleFile(event)">
     <div class="file-bar" id="fileBar">
-      <div class="file-bar-icon" id="fileIcon">📄</div>
+      <div class="file-bar-icon" id="fileIcon"><span class="ms" aria-hidden="true">description</span></div>
       <div class="file-bar-info">
         <div class="file-bar-name" id="fileName">—</div>
         <div class="file-bar-meta" id="fileMeta">—</div>
       </div>
-      <button class="file-bar-rm" onclick="removeFile()" title="Remove">✕</button>
+      <button class="file-bar-rm" onclick="removeFile()" title="Remove" aria-label="Remove file"><span class="ms" aria-hidden="true">close</span></button>
     </div>
   </div>
 
@@ -339,19 +341,19 @@ main { max-width: 920px; margin: 0 auto; padding: 24px 22px 100px; }
     <div class="step-label"><div class="step-num">2</div><div class="step-title">Choose Test Type</div></div>
     <div class="type-grid">
       <div class="type-card" data-t="flashcard" onclick="selectType('flashcard')">
-        <span class="type-emoji">🃏</span>
+        <span class="type-icon"><span class="ms" aria-hidden="true">style</span></span>
         <div class="type-check" id="chk-flashcard"></div>
         <h4>Flashcards</h4>
         <p>Flip cards for active recall. Keyboard-friendly.</p>
       </div>
       <div class="type-card" data-t="mcq" onclick="selectType('mcq')">
-        <span class="type-emoji">🎯</span>
+        <span class="type-icon"><span class="ms" aria-hidden="true">quiz</span></span>
         <div class="type-check" id="chk-mcq"></div>
         <h4>MCQ Quiz</h4>
         <p>4-option quiz. Score tracked in analytics.</p>
       </div>
       <div class="type-card" data-t="long" onclick="selectType('long')">
-        <span class="type-emoji">📝</span>
+        <span class="type-icon"><span class="ms" aria-hidden="true">edit_note</span></span>
         <div class="type-check" id="chk-long"></div>
         <h4>Long Answers</h4>
         <p>Exam-style questions with model answers.</p>
@@ -368,9 +370,9 @@ main { max-width: 920px; margin: 0 auto; padding: 24px 22px 100px; }
       <div class="opt-box">
         <label class="opt-lbl">Number of Questions</label>
         <div class="count-row">
-          <button class="cnt-btn" onclick="adjCount(-1)">−</button>
+          <button class="cnt-btn" onclick="adjCount(-1)" aria-label="Fewer questions"><span class="ms" aria-hidden="true">remove</span></button>
           <div class="cnt-val" id="cntVal">10</div>
-          <button class="cnt-btn" onclick="adjCount(1)">+</button>
+          <button class="cnt-btn" onclick="adjCount(1)" aria-label="More questions"><span class="ms" aria-hidden="true">add</span></button>
         </div>
       </div>
       <div class="opt-box">
@@ -386,7 +388,7 @@ main { max-width: 920px; margin: 0 auto; padding: 24px 22px 100px; }
 
   <!-- GENERATE -->
   <div class="gen-wrap">
-    <button class="btn btn-primary btn-lg gen-btn" id="genBtn" onclick="generate()" disabled>⚡ Generate Test</button>
+    <button class="btn btn-primary btn-lg gen-btn" id="genBtn" onclick="generate()" disabled><span class="ms" aria-hidden="true">bolt</span> Generate Test</button>
   </div>
 
   <hr class="divider" id="resultsDivider" style="display:none">
@@ -396,18 +398,18 @@ main { max-width: 920px; margin: 0 auto; padding: 24px 22px 100px; }
     <div class="results-hdr">
       <h2>Your <span id="resTypeLabel">Test</span></h2>
       <div class="results-actions">
-        <button class="btn btn-secondary btn-sm" onclick="copyAll()">📋 Copy</button>
-        <button class="btn btn-secondary btn-sm" onclick="generate()">↺ Regenerate</button>
-        <a class="btn btn-secondary btn-sm" href="dashboard.html"><span class="nav-emoji">📊</span> Dashboard</a>
+        <button class="btn btn-secondary btn-sm" onclick="copyAll()"><span class="ms" aria-hidden="true">content_copy</span> Copy</button>
+        <button class="btn btn-secondary btn-sm" onclick="generate()"><span class="ms" aria-hidden="true">refresh</span> Regenerate</button>
+        <a class="btn btn-secondary btn-sm" href="dashboard.html"><span class="ms" aria-hidden="true">dashboard</span> Dashboard</a>
       </div>
     </div>
 
     <!-- Flashcards -->
     <div id="fcView">
       <div class="fc-controls">
-        <button class="fc-btn" id="fcPrev" onclick="fcNav(-1)">←</button>
+        <button class="fc-btn" id="fcPrev" onclick="fcNav(-1)" aria-label="Previous card"><span class="ms" aria-hidden="true">arrow_back</span></button>
         <div class="fc-cnt" id="fcCnt">1 / 10</div>
-        <button class="fc-btn" id="fcNext" onclick="fcNav(1)">→</button>
+        <button class="fc-btn" id="fcNext" onclick="fcNav(1)" aria-label="Next card"><span class="ms" aria-hidden="true">arrow_forward</span></button>
       </div>
       <div class="flashcard" id="fcCard" onclick="fcFlip()">
         <div class="fc-inner">
@@ -423,7 +425,7 @@ main { max-width: 920px; margin: 0 auto; padding: 24px 22px 100px; }
     <div id="mcqView" class="hidden">
       <div class="mcq-list" id="mcqList"></div>
       <div class="mcq-footer">
-        <button class="btn btn-aqua" id="checkBtn" onclick="checkAnswers()">✓ Check Answers</button>
+        <button class="btn btn-aqua" id="checkBtn" onclick="checkAnswers()"><span class="ms" aria-hidden="true">done_all</span> Check Answers</button>
         <div class="score-card" id="scoreCard">
           <div class="score-pct" id="scorePct">—</div>
           <div class="score-grade" id="scoreGrade">—</div>
@@ -568,7 +570,7 @@ async function processFiles(files) {
     const countPrefix = loadedFiles.length > 1 ? `${loadedFiles.length} files · ` : '';
     document.getElementById('fileMeta').textContent = `${countPrefix}${totalWords.toLocaleString()} words · Ready`;
     updateGenBtn();
-    toast(`${loadedFiles.length > 1 ? loadedFiles.length + ' documents' : 'Notes'} loaded ✓`, 'success');
+    toast(`${loadedFiles.length > 1 ? loadedFiles.length + ' documents' : 'Notes'} loaded`, 'success');
   } catch(err) {
     toast('Error reading file(s): ' + err.message, 'error');
     removeFile();
@@ -596,13 +598,13 @@ async function extractDOCX(file) {
 }
 
 function showFileBarMultiple(files) {
-  const icons = {pdf:'📄',txt:'📝',docx:'📘',doc:'📘'};
+  const icons = {pdf:'picture_as_pdf', txt:'text_snippet', docx:'description', doc:'description'};
   if (files.length === 1) {
     const ext = files[0].name.split('.').pop().toLowerCase();
-    document.getElementById('fileIcon').textContent = icons[ext] || '📄';
+    document.getElementById('fileIcon').innerHTML = icon(icons[ext] || 'description');
     document.getElementById('fileName').textContent = files[0].name;
   } else {
-    document.getElementById('fileIcon').textContent = '📚';
+    document.getElementById('fileIcon').innerHTML = icon('folder_copy');
     document.getElementById('fileName').textContent = `${files.length} files: ${files.map(f=>f.name).join(', ')}`;
   }
   document.getElementById('fileMeta').textContent = 'Extracting text…';
@@ -624,7 +626,7 @@ function removeFile() {
 function selectType(t) {
   document.querySelectorAll('.type-card').forEach(c => { c.classList.remove('sel'); c.querySelector('.type-check').textContent = ''; });
   document.querySelector(`.type-card[data-t="${t}"]`).classList.add('sel');
-  document.getElementById(`chk-${t}`).textContent = '✓';
+  document.getElementById(`chk-${t}`).innerHTML = icon('check');
   S.type = t; updateGenBtn();
 }
 function adjCount(d) { S.count = Math.max(3, Math.min(20, S.count + d)); document.getElementById('cntVal').textContent = S.count; }
@@ -638,7 +640,7 @@ function updateGenBtn() {
 }
 
 // ── GENERATE ──
-const MSGS = ['📚 Reading your notes…','🧠 Understanding concepts…','✏️ Crafting questions…','🎯 Almost done…'];
+const MSGS = ['Reading your notes…','Understanding concepts…','Crafting questions…','Almost done…'];
 async function generate() {
   if (!S.notes || !S.type || !currentUser) return;
   showLoader(true);
@@ -665,7 +667,7 @@ async function generate() {
       topics
     }).then(id => { S.currentTestId = id; }).catch(e => console.warn('Could not save test:', e));
     renderResults();
-    toast(`${data.length} ${S.type === 'flashcard' ? 'flashcards' : 'questions'} generated! 🎉`, 'success');
+    toast(`${data.length} ${S.type === 'flashcard' ? 'flashcards' : 'questions'} generated`, 'success');
     document.getElementById('resultsSec').scrollIntoView({behavior:'smooth', block:'start'});
   } catch(err) {
     toast(err.message || 'Generation failed. Please try again.', 'error');
@@ -686,7 +688,7 @@ function renderResults() {
   document.getElementById('resultsSec').classList.add('show');
   document.getElementById('resultsDivider').style.display = '';
   ['fcView','mcqView','longView'].forEach(id => document.getElementById(id).classList.add('hidden'));
-  const labels = {flashcard:'Flashcards 🃏', mcq:'MCQ Quiz 🎯', long:'Long Answers 📝'};
+  const labels = {flashcard:'Flashcards', mcq:'MCQ Quiz', long:'Long Answers'};
   document.getElementById('resTypeLabel').textContent = labels[S.type];
   if (S.type === 'flashcard') { document.getElementById('fcView').classList.remove('hidden'); S.fcIdx = 0; renderFC(); }
   if (S.type === 'mcq')      { document.getElementById('mcqView').classList.remove('hidden'); renderMCQ(); }
@@ -732,7 +734,7 @@ function renderMCQ() {
           </button>`;
         }).join('')}
       </div>
-      <div class="mcq-exp" id="exp${qi}"><strong>💡 Explanation:</strong> ${esc(q.explanation||'')}</div>
+      <div class="mcq-exp" id="exp${qi}"><strong>${icon('lightbulb')} Explanation:</strong> ${esc(q.explanation||'')}</div>
     </div>`).join('');
 }
 function pickOpt(qi, oi, L) {
@@ -777,7 +779,7 @@ async function checkAnswers() {
         totalQ:       total,
         topicResults
       });
-      document.getElementById('scoreSaved').textContent = '✓ Score saved to your dashboard';
+      document.getElementById('scoreSaved').innerHTML = icon('check_circle') + ' Score saved to your dashboard';
       // Refresh streak in nav
       const profile = await getUserProfile(currentUser.uid);
       if (profile?.currentStreak) { document.getElementById('navStreak').style.display='flex'; document.getElementById('streakNum').textContent = profile.currentStreak; }
@@ -792,7 +794,7 @@ function renderLong() {
       <div class="la-head" onclick="toggleLA(${i})">
         <span class="la-qnum">Q${i+1}</span>
         <div class="la-q">${esc(cleanQuestion(q.question))}</div>
-        <span class="la-arrow">⌄</span>
+        <span class="la-arrow">${icon('keyboard_arrow_down')}</span>
       </div>
 
       <div class="la-body">
@@ -863,7 +865,7 @@ function copyAll() {
   });
 
   navigator.clipboard.writeText(txt).then(() => {
-    toast('Copied clean text! ✅', 'success');
+    toast('Copied to clipboard', 'success');
   });
 }
 
@@ -874,7 +876,8 @@ function toast(msg, type='info') {
   const wrap = document.getElementById('toastWrap');
   const el = document.createElement('div');
   el.className = `toast ${type}`;
-  el.textContent = msg;
+  el.innerHTML = icon({ success: 'check_circle', error: 'error', info: 'info' }[type] || 'info') + ' ';
+  el.append(msg);
   wrap.appendChild(el);
   setTimeout(()=>el.remove(), 3500);
 }

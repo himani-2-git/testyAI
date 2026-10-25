@@ -4,11 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>testyAI — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&display=block" rel="stylesheet">
 <link rel="stylesheet" href="css/shared.css">
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="js/config.js"></script>
+<script src="js/ui.js"></script>
 <script src="js/analytics.js"></script>
 <script src="js/db.js"></script>
 <style>
@@ -140,18 +144,18 @@ main { max-width: 1000px; margin: 0 auto; padding: 36px 22px 100px; }
 <!-- NAVBAR -->
 <nav class="navbar">
   <a class="nav-logo" href="app.html">
-    <div class="nav-logo-icon">✏️</div>
+    <div class="nav-logo-icon"><span class="ms" aria-hidden="true">edit</span></div>
     <div class="nav-logo-text">testy<span>AI</span></div>
   </a>
   <div class="nav-links">
-    <a class="nav-link" href="app.html"><span class="nav-emoji">⚡</span> Generate</a>
-    <a class="nav-link active" href="dashboard.html"><span class="nav-emoji">📊</span> Dashboard</a>
-    <div class="nav-streak" id="navStreak" style="display:none">🔥 <span id="streakNum">0</span></div>
+    <a class="nav-link" href="app.html" title="Generate" aria-label="Generate"><span class="ms" aria-hidden="true">bolt</span><span class="nav-label">Generate</span></a>
+    <a class="nav-link active" href="dashboard.html" title="Dashboard" aria-label="Dashboard"><span class="ms" aria-hidden="true">dashboard</span><span class="nav-label">Dashboard</span></a>
+    <div class="nav-streak" id="navStreak" style="display:none" title="Study streak"><span class="ms" aria-hidden="true">local_fire_department</span> <span id="streakNum">0</span></div>
     <div class="nav-user">
       <div class="nav-avatar" id="navAvatar">?</div>
       <span class="nav-name" id="navName">—</span>
     </div>
-    <button class="nav-link" onclick="auth.signOut().then(()=>window.location.href='index.html')" style="color:var(--muted)">Sign out</button>
+    <button class="nav-link" onclick="auth.signOut().then(()=>window.location.href='index.html')" style="color:var(--muted)" title="Sign out" aria-label="Sign out"><span class="ms" aria-hidden="true">logout</span><span class="nav-label">Sign out</span></button>
   </div>
 </nav>
 
@@ -159,23 +163,23 @@ main { max-width: 1000px; margin: 0 auto; padding: 36px 22px 100px; }
   <!-- Welcome -->
   <div class="welcome">
     <div>
-      <h1>Welcome back, <span id="displayName">Student</span> 👋</h1>
+      <h1>Welcome back, <span id="displayName">Student</span></h1>
       <p id="welcomeSub">Loading your progress…</p>
     </div>
-    <a class="btn btn-primary" href="app.html">⚡ New Test</a>
+    <a class="btn btn-primary" href="app.html"><span class="ms" aria-hidden="true">add</span> New Test</a>
   </div>
 
   <!-- Streak Card -->
   <div class="streak-card">
-    <div class="streak-fire">🔥</div>
+    <div class="streak-fire"><span class="ms" aria-hidden="true">local_fire_department</span></div>
     <div class="streak-info">
       <h2><span id="streakBig">—</span> day streak</h2>
       <p id="streakMsg">Keep going!</p>
       <div class="streak-sub" id="streakSub">—</div>
     </div>
     <div class="streak-badges">
-      <div class="streak-badge">🏆 Best: <span id="longestStreak">—</span> days</div>
-      <div class="streak-badge">📅 Last active: <span id="lastActive">—</span></div>
+      <div class="streak-badge"><span class="ms" aria-hidden="true">trophy</span> Best: <span id="longestStreak">—</span> days</div>
+      <div class="streak-badge"><span class="ms" aria-hidden="true">calendar_today</span> Last active: <span id="lastActive">—</span></div>
     </div>
   </div>
 
@@ -209,18 +213,18 @@ main { max-width: 1000px; margin: 0 auto; padding: 36px 22px 100px; }
 
     <!-- Weak Topics + Feedback -->
     <div class="panel">
-      <div class="panel-title"><span>📉</span> Areas to Improve</div>
+      <div class="panel-title"><span class="ms" aria-hidden="true">trending_down</span> Areas to Improve</div>
       <div id="weakTopicsWrap">
-        <div class="empty"><span class="e-icon">📚</span>Complete MCQ tests to see topic insights</div>
+        <div class="empty"><span class="ms e-icon" aria-hidden="true">menu_book</span>Complete MCQ tests to see topic insights</div>
       </div>
       <div class="feedback-box hidden" id="feedbackBox"></div>
     </div>
 
     <!-- Strong Topics -->
     <div class="panel">
-      <div class="panel-title"><span>💪</span> Your Strengths</div>
+      <div class="panel-title"><span class="ms" aria-hidden="true">workspace_premium</span> Your Strengths</div>
       <div id="strongTopicsWrap">
-        <div class="empty"><span class="e-icon">🎯</span>Your strong topics will appear here</div>
+        <div class="empty"><span class="ms e-icon" aria-hidden="true">target</span>Your strong topics will appear here</div>
       </div>
     </div>
 
@@ -228,7 +232,7 @@ main { max-width: 1000px; margin: 0 auto; padding: 36px 22px 100px; }
 
   <!-- Score Trend (Full Width) -->
   <div class="panel" style="margin-bottom:24px">
-    <div class="panel-title"><span>📈</span> Score Trend (last 10)</div>
+    <div class="panel-title"><span class="ms" aria-hidden="true">show_chart</span> Score Trend (last 10)</div>
     <div class="chart-wrap" id="chartWrap">
       <div class="chart-empty">No MCQ scores yet. Take a quiz!</div>
     </div>
@@ -236,9 +240,9 @@ main { max-width: 1000px; margin: 0 auto; padding: 36px 22px 100px; }
 
   <!-- Recent tests (Full Width) -->
   <div class="panel" style="margin-bottom:28px">
-    <div class="panel-title"><span>📚</span> Test History</div>
+    <div class="panel-title"><span class="ms" aria-hidden="true">history</span> Test History</div>
     <div class="history-list" id="historyList">
-      <div class="empty"><span class="e-icon">🗂️</span>No tests yet. Generate your first test!</div>
+      <div class="empty"><span class="ms e-icon" aria-hidden="true">folder_open</span>No tests yet. Generate your first test!</div>
     </div>
   </div>
 
@@ -313,7 +317,7 @@ function renderSubjectChips() {
   }
   bar.style.display = 'flex';
   const totalCount = Object.keys(allCompiledTopics).length;
-  const allHtml = `<button class="subj-chip ${currentActiveSubject==='all'?'active':''}" onclick="filterSubject('all')">🌐 All Subjects (${totalCount})</button>`;
+  const allHtml = `<button class="subj-chip ${currentActiveSubject==='all'?'active':''}" onclick="filterSubject('all')">${icon('public')} All Subjects (${totalCount})</button>`;
   const subjectBtns = availableSubjects.map(sub => {
     const count = Object.values(allCompiledTopics).filter(t => t.subject === sub).length;
     return `<button class="subj-chip ${currentActiveSubject===sub?'active':''}" onclick="filterSubject('${esc(sub)}')">${esc(sub)} (${count})</button>`;
@@ -336,15 +340,15 @@ function renderStreak(p) {
   if (streak > 0) { document.getElementById('navStreak').style.display = 'flex'; }
 
   const msgs = {
-    0: "Start your streak today! 🚀",
-    1: "You started! Come back tomorrow. 🌱",
-    3: "3 days strong! Keep it up 💪",
-    7: "A whole week! You're on fire! 🔥",
-    14: "Two weeks! Incredible dedication 🏅",
-    30: "30 days! You're a legend 🏆"
+    0: "Start your streak today.",
+    1: "You started. Come back tomorrow.",
+    3: "3 days strong. Keep it up.",
+    7: "A whole week. Great consistency.",
+    14: "Two weeks. Excellent dedication.",
+    30: "30 days. Outstanding commitment."
   };
   const key = [30,14,7,3,1,0].find(k => streak >= k);
-  document.getElementById('streakMsg').textContent  = msgs[key] || `${streak} days in a row! 🔥`;
+  document.getElementById('streakMsg').textContent  = msgs[key] || `${streak} days in a row`;
   document.getElementById('streakSub').textContent  = `Don't break the chain — study something today`;
   document.getElementById('longestStreak').textContent = p.longestStreak || streak;
   document.getElementById('lastActive').textContent    = p.lastActiveDate || '—';
@@ -419,16 +423,16 @@ function renderTopics(topicPerf, subjectFilter = 'all') {
       const subTag = (subjectFilter === 'all' && t.subject && t.subject !== 'General')
         ? formatSubjTag(t.subject) + ' '
         : '';
-      if (t.accuracy < 40) return `⚠️ ${subTag}<strong>${esc(t.topic)}</strong> — only ${t.accuracy}% accuracy. Revisit the basics.`;
-      if (t.accuracy < 60) return `📖 ${subTag}<strong>${esc(t.topic)}</strong> — ${t.accuracy}%. Practice more questions on this topic.`;
-      return `🔄 ${subTag}<strong>${esc(t.topic)}</strong> — ${t.accuracy}%. A few more revisions and you'll master this.`;
+      if (t.accuracy < 40) return `${icon('warning')} ${subTag}<strong>${esc(t.topic)}</strong> — only ${t.accuracy}% accuracy. Revisit the basics.`;
+      if (t.accuracy < 60) return `${icon('menu_book')} ${subTag}<strong>${esc(t.topic)}</strong> — ${t.accuracy}%. Practice more questions on this topic.`;
+      return `${icon('autorenew')} ${subTag}<strong>${esc(t.topic)}</strong> — ${t.accuracy}%. A few more revisions and you'll master this.`;
     });
     fb.innerHTML = msgs.join('<br>');
   } else {
     const msg = subjectFilter === 'all'
-      ? '🎉 Great job! No weak areas below 75% accuracy.'
-      : `🎉 Great job! No weak areas in ${esc(subjectFilter)}. All topics above 75%!`;
-    weakWrap.innerHTML = `<div class="empty"><span class="e-icon">✨</span>${msg}</div>`;
+      ? 'No weak areas below 75% accuracy.'
+      : `No weak areas in ${esc(subjectFilter)}. All topics above 75%.`;
+    weakWrap.innerHTML = `<div class="empty">${icon('task_alt', 'e-icon')}${msg}</div>`;
     document.getElementById('feedbackBox').classList.add('hidden');
   }
 
@@ -449,7 +453,7 @@ function renderTopics(topicPerf, subjectFilter = 'all') {
     const msg = subjectFilter === 'all'
       ? 'Complete MCQ tests with 60%+ score to see your strengths'
       : `Complete more tests in ${esc(subjectFilter)} with 60%+ score to build your strengths`;
-    strongWrap.innerHTML = `<div class="empty"><span class="e-icon">🎯</span>${msg}</div>`;
+    strongWrap.innerHTML = `<div class="empty">${icon('target', 'e-icon')}${msg}</div>`;
   }
 }
 
@@ -477,10 +481,10 @@ function renderChart(scores) {
 function renderHistory(tests) {
   const wrap = document.getElementById('historyList');
   if (!tests.length) {
-    wrap.innerHTML = '<div class="empty"><span class="e-icon">🗂️</span>No tests yet. Generate your first test!</div>';
+    wrap.innerHTML = '<div class="empty"><span class="ms e-icon" aria-hidden="true">folder_open</span>No tests yet. Generate your first test!</div>';
     return;
   }
-  const icons = { mcq:'🎯', flashcard:'🃏', long:'📝' };
+  const icons = { mcq:'quiz', flashcard:'style', long:'edit_note' };
   wrap.innerHTML = tests.map(t => {
     const score = t.scorePercent != null ? t.scorePercent : null;
     let scoreHtml = '<span class="hist-score na">—</span>';
@@ -490,14 +494,14 @@ function renderHistory(tests) {
     }
     const date = t.createdAt?.toDate ? t.createdAt.toDate().toLocaleDateString('en-IN',{day:'numeric',month:'short'}) : '—';
     return `<div class="hist-item">
-      <div class="hist-icon ${t.type}">${icons[t.type]||'📄'}</div>
+      <div class="hist-icon ${t.type}">${icon(icons[t.type] || 'description')}</div>
       <div class="hist-info">
         <div class="hist-title">${esc(t.title||'Untitled')}</div>
         <div class="hist-meta">${t.questionCount||0} Qs · ${t.difficulty||'Medium'} · ${date}</div>
       </div>
       <span class="hist-tag ${t.type}">${t.type?.toUpperCase()}</span>
       ${scoreHtml}
-      <button class="delete-btn" onclick="delTest('${t.id}',this)" title="Delete">🗑</button>
+      <button class="delete-btn" onclick="delTest('${t.id}',this)" title="Delete" aria-label="Delete test">${icon('delete')}</button>
     </div>`;
   }).join('');
 }
@@ -520,7 +524,8 @@ function toast(msg, type='info') {
   const wrap = document.getElementById('toastWrap');
   const el = document.createElement('div');
   el.className = `toast ${type}`;
-  el.textContent = msg;
+  el.innerHTML = icon({ success: 'check_circle', error: 'error', info: 'info' }[type] || 'info') + ' ';
+  el.append(msg);
   wrap.appendChild(el);
   setTimeout(()=>el.remove(),3500);
 }

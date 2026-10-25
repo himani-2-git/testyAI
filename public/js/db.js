@@ -220,9 +220,9 @@ function formatDate(ts) {
 
 /** Grade label from score percent */
 function gradeFromScore(pct) {
-  if (pct >= 90) return { label: 'Outstanding 🏆', color: 'var(--green)' };
-  if (pct >= 75) return { label: 'Great Job 🎯',   color: 'var(--green)' };
-  if (pct >= 60) return { label: 'Good Effort 📗',  color: 'var(--amber)' };
-  if (pct >= 40) return { label: 'Keep Going 📚',   color: 'var(--amber)' };
-  return             { label: 'Needs Work 💪',       color: 'var(--tiger)' };
+  if (pct >= 90) return { label: 'Outstanding', color: 'var(--green)' };
+  if (pct >= 75) return { label: 'Great Job',   color: 'var(--green)' };
+  if (pct >= 60) return { label: 'Good Effort',  color: 'var(--amber)' };
+  if (pct >= 40) return { label: 'Keep Going',   color: 'var(--amber)' };
+  return             { label: 'Needs Work',       color: 'var(--tiger)' };
 }

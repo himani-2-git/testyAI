@@ -62,7 +62,7 @@ async function callAI(notes, type, count, difficulty) {
 }
 
 // ============================================================
-// 👤 CREATE USER PROFILE ON LOGIN
+// Create the user profile on login
 // ============================================================
 
 auth.onAuthStateChanged(async (user) => {
