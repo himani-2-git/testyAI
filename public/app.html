@@ -15,9 +15,12 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
-<script src="js/config.js"></script>
 <script src="js/ui.js"></script>
+<script src="js/http.js"></script>
 <script src="js/analytics.js"></script>
+<script src="js/files.js"></script>
+<script src="js/saveTracker.js"></script>
+<script src="js/config.js"></script>
 <script src="js/db.js"></script>
 <style>
 main { max-width: 920px; margin: 0 auto; padding: 24px 22px 100px; }
@@ -323,7 +326,7 @@ main { max-width: 920px; margin: 0 auto; padding: 24px 22px 100px; }
         <span class="chip"><span class="ms" aria-hidden="true">picture_as_pdf</span> PDF</span><span class="chip"><span class="ms" aria-hidden="true">text_snippet</span> TXT</span><span class="chip"><span class="ms" aria-hidden="true">description</span> DOCX</span>
       </div>
     </div>
-    <input type="file" id="fileIn" accept=".pdf,.txt,.docx,.doc" multiple style="display:none" onchange="handleFile(event)">
+    <input type="file" id="fileIn" accept=".pdf,.docx,.txt" multiple style="display:none" onchange="handleFile(event)">
     <div class="file-bar" id="fileBar">
       <div class="file-bar-icon" id="fileIcon"><span class="ms" aria-hidden="true">description</span></div>
       <div class="file-bar-info">
@@ -498,9 +501,10 @@ const S = {
   notes: '', fileName: '', fileList: [],
   type: '', count: 10, difficulty: 'Medium',
   results: [], fcIdx: 0,
-  mcqAnswers: {}, currentTestId: null,
+  mcqAnswers: {},
   subject: ''
 };
+const testSaver = createSaveTracker(testData => saveTest(currentUser.uid, testData));
 
 // ── Drag-drop ──
 const zone = document.getElementById('uploadZone');
@@ -518,39 +522,39 @@ async function handleFile(e) {
   if (files.length) processFiles(files);
 }
 
-async function processFiles(files) {
-  const validExts = ['pdf','txt','docx','doc'];
-  const validFiles = files.filter(f => {
-    const ext = f.name.split('.').pop().toLowerCase();
-    return validExts.includes(ext);
-  });
+const NOTES_LIMIT = 12000; // matches MAX_NOTES_LENGTH on the server; Phase 4 replaces this with chunking
 
-  if (!validFiles.length) {
-    toast('Unsupported format. Use PDF, TXT, or DOCX.','error');
-    return;
-  }
+async function processFiles(files) {
+  const validFiles = files.filter(f => isSupportedFile(f.name));
+  files
+    .filter(f => !isSupportedFile(f.name))
+    .forEach(f => toast(unsupportedFileMessage(f.name), 'error'));
+
+  if (!validFiles.length) return;
 
   showFileBarMultiple(validFiles);
 
   try {
     const docs = [];
     const loadedFiles = [];
+    const notices = [];
 
     for (const file of validFiles) {
-      const ext = file.name.split('.').pop().toLowerCase();
-      let text = '';
-      if (ext === 'pdf')                    text = await extractPDF(file);
-      else if (ext === 'txt')               text = await extractTXT(file);
-      else if (['docx','doc'].includes(ext)) text = await extractDOCX(file);
-
+      const text = await extractText(file, notices);
       if (text && text.trim().length >= 20) {
         const clean = text.trim();
         docs.push({ name: file.name, text: clean });
         loadedFiles.push({ name: file.name, words: clean.split(/\s+/).length });
+      } else {
+        notices.push(`No readable text found in "${file.name}" (scanned PDFs are not supported yet).`);
       }
     }
 
-    const combinedNotes = buildNotes(docs, 12000);   // matches the server limit; each file gets an equal share
+    const trimNotice = trimmedDocsNotice(findTrimmedDocs(docs, NOTES_LIMIT));
+    if (trimNotice) notices.push(trimNotice);
+    notices.forEach(msg => toast(msg, 'info', 9000));
+
+    const combinedNotes = buildNotes(docs, NOTES_LIMIT);   // each file gets an equal share
     if (combinedNotes.length < 30) {
       toast('Could not extract enough text from file(s). Try another file.','error');
       removeFile();
@@ -568,7 +572,8 @@ async function processFiles(files) {
 
     const totalWords = S.notes.split(/\s+/).length;
     const countPrefix = loadedFiles.length > 1 ? `${loadedFiles.length} files · ` : '';
-    document.getElementById('fileMeta').textContent = `${countPrefix}${totalWords.toLocaleString()} words · Ready`;
+    const trimmedSuffix = trimNotice ? ' · Trimmed to fit the limit' : '';
+    document.getElementById('fileMeta').textContent = `${countPrefix}${totalWords.toLocaleString()} words used · Ready${trimmedSuffix}`;
     updateGenBtn();
     toast(`${loadedFiles.length > 1 ? loadedFiles.length + ' documents' : 'Notes'} loaded`, 'success');
   } catch(err) {
@@ -577,16 +582,32 @@ async function processFiles(files) {
   }
 }
 
+async function extractText(file, notices) {
+  const ext = getFileExtension(file.name);
+  if (ext === 'pdf') {
+    const { text, pagesRead, totalPages } = await extractPDF(file);
+    const notice = skippedPagesNotice({ name: file.name, pagesRead, totalPages });
+    if (notice) notices.push(notice);
+    return text;
+  }
+  if (ext === 'txt') return extractTXT(file);
+  if (ext === 'docx') return extractDOCX(file);
+  return '';
+}
+
 async function extractPDF(file) {
   const buf = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({data: buf}).promise;
-  let txt = '';
-  for (let i = 1; i <= Math.min(pdf.numPages, 30); i++) {
+  // isEvalSupported: false is the official fix for CVE-2024-4367: without it a
+  // crafted PDF can run JavaScript in our page through PDF.js's font code.
+  const pdf = await pdfjsLib.getDocument({ data: buf, isEvalSupported: false }).promise;
+  const pagesRead = Math.min(pdf.numPages, MAX_PDF_PAGES);
+  let text = '';
+  for (let i = 1; i <= pagesRead; i++) {
     const page = await pdf.getPage(i);
     const content = await page.getTextContent();
-    txt += content.items.map(it => it.str).join(' ') + '\n';
+    text += content.items.map(it => it.str).join(' ') + '\n';
   }
-  return txt;
+  return { text, pagesRead, totalPages: pdf.numPages };
 }
 function extractTXT(file) {
   return new Promise((res,rej) => { const r = new FileReader(); r.onload = e => res(e.target.result); r.onerror = rej; r.readAsText(file); });
@@ -598,9 +619,9 @@ async function extractDOCX(file) {
 }
 
 function showFileBarMultiple(files) {
-  const icons = {pdf:'picture_as_pdf', txt:'text_snippet', docx:'description', doc:'description'};
+  const icons = {pdf:'picture_as_pdf', txt:'text_snippet', docx:'description'};
   if (files.length === 1) {
-    const ext = files[0].name.split('.').pop().toLowerCase();
+    const ext = getFileExtension(files[0].name);
     document.getElementById('fileIcon').innerHTML = icon(icons[ext] || 'description');
     document.getElementById('fileName').textContent = files[0].name;
   } else {
@@ -651,13 +672,13 @@ async function generate() {
     if (!Array.isArray(data) || !data.length) throw new Error('No questions returned. Try again.');
     S.results = data;
     S.mcqAnswers = {};
-    S.currentTestId = null;
-    // Persist in the background; a failed save must not block showing results
+    // Persist in the background; a failed save must not block showing results.
+    // checkAnswers() waits for this save (and retries it once) before saving the score.
     const topics = extractTopics(data);
     const subjects = [...new Set(data.map(q => q.subject).filter(Boolean))];
     const primarySubject = subjects[0] || 'General';
     S.subject = primarySubject;
-    saveTest(currentUser.uid, {
+    testSaver.start({
       title:         S.fileName || 'Untitled Notes',
       subject:       primarySubject,
       subjects:      subjects.length ? subjects : [primarySubject],
@@ -665,7 +686,7 @@ async function generate() {
       difficulty:    S.difficulty,
       questions:     data,
       topics
-    }).then(id => { S.currentTestId = id; }).catch(e => console.warn('Could not save test:', e));
+    }).catch(e => console.warn('Could not save test (will retry on Check Answers):', e));
     renderResults();
     toast(`${data.length} ${S.type === 'flashcard' ? 'flashcards' : 'questions'} generated`, 'success');
     document.getElementById('resultsSec').scrollIntoView({behavior:'smooth', block:'start'});
@@ -771,20 +792,27 @@ async function checkAnswers() {
   const uaMap = {};
   S.results.forEach((_,i) => { uaMap[i] = S.mcqAnswers[i]?.L || null; });
   const topicResults = computeTopicResults(S.results, uaMap, S.subject || 'General');
+  const savedMsg = document.getElementById('scoreSaved');
+  savedMsg.innerHTML = icon('hourglass_top') + ' Saving your score…';
   try {
-    if (S.currentTestId) {
-      await saveMCQAttempt(currentUser.uid, S.currentTestId, {
-        userAnswers:  uaMap,
-        correctCount: correct,
-        totalQ:       total,
-        topicResults
-      });
-      document.getElementById('scoreSaved').innerHTML = icon('check_circle') + ' Score saved to your dashboard';
-      // Refresh streak in nav
-      const profile = await getUserProfile(currentUser.uid);
-      if (profile?.currentStreak) { document.getElementById('navStreak').style.display='flex'; document.getElementById('streakNum').textContent = profile.currentStreak; }
-    }
-  } catch(e) { console.warn('Could not save attempt:', e); }
+    const testId = await testSaver.waitForId();
+    await saveMCQAttempt(currentUser.uid, testId, {
+      userAnswers:  uaMap,
+      correctCount: correct,
+      totalQ:       total,
+      topicResults
+    });
+    savedMsg.innerHTML = icon('check_circle') + ' Score saved to your dashboard';
+  } catch(e) {
+    console.warn('Could not save attempt:', e);
+    savedMsg.innerHTML = icon('error') + ' Your score could not be saved. Check your connection and try a new test.';
+    return;
+  }
+  // Refresh streak in nav (a failure here does not affect the saved score)
+  try {
+    const profile = await getUserProfile(currentUser.uid);
+    if (profile?.currentStreak) { document.getElementById('navStreak').style.display='flex'; document.getElementById('streakNum').textContent = profile.currentStreak; }
+  } catch(e) { console.warn('Could not refresh streak:', e); }
 }
 
 /* LONG */
@@ -870,16 +898,17 @@ function copyAll() {
 }
 
 // ── HELPERS ──
-function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+const esc = escapeHtml; // shared helper from ui.js (also escapes ' )
 function showLoader(on) { document.getElementById('loadingOverlay').classList.toggle('show',on); }
-function toast(msg, type='info') {
+function toast(msg, type='info', durationMs=3500) {
   const wrap = document.getElementById('toastWrap');
   const el = document.createElement('div');
   el.className = `toast ${type}`;
+  el.setAttribute('role', type === 'error' ? 'alert' : 'status');
   el.innerHTML = icon({ success: 'check_circle', error: 'error', info: 'info' }[type] || 'info') + ' ';
-  el.append(msg);
+  el.append(msg); // append() inserts text, never HTML
   wrap.appendChild(el);
-  setTimeout(()=>el.remove(), 3500);
+  setTimeout(()=>el.remove(), durationMs);
 }
 </script>
 </body>

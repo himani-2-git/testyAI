@@ -24,11 +24,13 @@ googleProvider.setCustomParameters({ prompt: 'select_account' });
 // ============================================================
 // AI generation — calls the authenticated /api/generate endpoint.
 // Provider API keys live only in server-side environment variables.
+// The server checks the Firebase ID token sent in the Authorization header.
 // ============================================================
 
 /**
  * callAI — sends generation params to the server-side /api/generate
  * endpoint which handles prompt-building, AI calls, and validation.
+ * Requires http.js (readJsonResponse) to be loaded.
  *
  * @param {string} notes      - Extracted text from the uploaded file
  * @param {string} type       - 'flashcard' | 'mcq' | 'long'
@@ -37,17 +39,20 @@ googleProvider.setCustomParameters({ prompt: 'select_account' });
  * @returns {Promise<Array>}  - Validated array of question objects
  */
 async function callAI(notes, type, count, difficulty) {
+  if (!auth.currentUser) throw new Error('Please sign in again.');
+  // getIdToken() returns a cached token and refreshes it automatically when it is about to expire.
+  const idToken = await auth.currentUser.getIdToken();
+
   const res = await fetch('/api/generate', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${idToken}`,
+    },
     body: JSON.stringify({ notes, type, count, difficulty })
   });
 
-  const data = await res.json();
-
-  if (!res.ok) {
-    throw new Error(data.error || 'Generation failed. Please try again.');
-  }
+  const data = await readJsonResponse(res);
 
   if (!Array.isArray(data.questions) || !data.questions.length) {
     throw new Error('Server returned empty questions. Please try again.');
@@ -55,7 +60,6 @@ async function callAI(notes, type, count, difficulty) {
 
   if (data.subject) {
     data.questions.forEach(q => { if (!q.subject) q.subject = data.subject; });
-    data.questions.detectedSubject = data.subject;
   }
 
   return data.questions;

@@ -44,13 +44,35 @@
   const getWeakTopics   = (perf, subject) => rankTopics(perf, { subject, predicate: a => a < WEAK_BELOW,  order: 1 });
   const getStrongTopics = (perf, subject) => rankTopics(perf, { subject, predicate: a => a >= STRONG_FROM, order: -1 });
 
+  const DOC_SEPARATOR = '\n\n';
+  const docHeader = name => `=== DOCUMENT: ${name} ===\n`;
+
+  /** Characters of text each document may use, after paying for the headers. */
+  function perDocTextBudget(docs, budget) {
+    const headers = docs.reduce((sum, d) => sum + docHeader(d.name).length, 0);
+    const separators = DOC_SEPARATOR.length * (docs.length - 1);
+    return Math.max(0, Math.floor((budget - headers - separators) / docs.length));
+  }
+
   /** Split a character budget evenly across documents so no file is silently dropped. */
   function buildNotes(docs, budget = 12000) {
     if (!docs.length) return '';
-    const per = Math.floor(budget / docs.length);
+    const per = perDocTextBudget(docs, budget);
     return docs
-      .map(({ name, text }) => `=== DOCUMENT: ${name} ===\n${text.trim().slice(0, per)}`)
-      .join('\n\n');
+      .map(({ name, text }) => docHeader(name) + text.trim().slice(0, per))
+      .join(DOC_SEPARATOR);
+  }
+
+  /** Which documents buildNotes cuts, and how much of each is kept (so the UI can say so). */
+  function findTrimmedDocs(docs, budget = 12000) {
+    if (!docs.length) return [];
+    const per = perDocTextBudget(docs, budget);
+    return docs
+      .filter(({ text }) => text.trim().length > per)
+      .map(({ name, text }) => {
+        const totalChars = text.trim().length;
+        return { name, keptChars: per, totalChars, percentKept: Math.max(1, Math.floor((per / totalChars) * 100)) };
+      });
   }
 
   /** Merge one attempt into stored stats. Keeps subject/cleanTopic (the old merge dropped them). */
@@ -63,7 +85,18 @@
     return out;
   }
 
-  const api = { mergeTopicPerf, localDateStr, daysBetween, nextStreak, getWeakTopics, getStrongTopics, buildNotes };
+  const api = {
+    WEAK_BELOW,
+    STRONG_FROM,
+    mergeTopicPerf,
+    localDateStr,
+    daysBetween,
+    nextStreak,
+    getWeakTopics,
+    getStrongTopics,
+    buildNotes,
+    findTrimmedDocs,
+  };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else Object.assign(root, api);
 })(typeof window !== 'undefined' ? window : globalThis);

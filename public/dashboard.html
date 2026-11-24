@@ -11,9 +11,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-<script src="js/config.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/analytics.js"></script>
+<script src="js/dashboardView.js"></script>
+<script src="js/config.js"></script>
 <script src="js/db.js"></script>
 <style>
 main { max-width: 1000px; margin: 0 auto; padding: 36px 22px 100px; }
@@ -271,7 +272,14 @@ function renderNavUser(user) {
   const av = document.getElementById('navAvatar');
   const initial = (user.displayName || user.email || 'U')[0].toUpperCase();
   if (user.photoURL) {
-    av.innerHTML = `<img src="${user.photoURL}" alt="${initial}" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;" onerror="this.remove(); document.getElementById('navAvatar').textContent='${initial}';">`;
+    // Built with DOM properties, not an HTML string, so the URL and name can't inject markup.
+    const img = new Image();
+    img.referrerPolicy = 'no-referrer';
+    img.alt = initial;
+    img.src = user.photoURL;
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;display:block';
+    img.onerror = () => { av.textContent = initial; };
+    av.replaceChildren(img);
   } else {
     av.textContent = initial;
   }
@@ -316,14 +324,24 @@ function renderSubjectChips() {
     return;
   }
   bar.style.display = 'flex';
-  const totalCount = Object.keys(allCompiledTopics).length;
-  const allHtml = `<button class="subj-chip ${currentActiveSubject==='all'?'active':''}" onclick="filterSubject('all')">${icon('public')} All Subjects (${totalCount})</button>`;
-  const subjectBtns = availableSubjects.map(sub => {
-    const count = Object.values(allCompiledTopics).filter(t => t.subject === sub).length;
-    return `<button class="subj-chip ${currentActiveSubject===sub?'active':''}" onclick="filterSubject('${esc(sub)}')">${esc(sub)} (${count})</button>`;
-  }).join('');
-  chips.innerHTML = allHtml + subjectBtns;
+  const topicCounts = {};
+  availableSubjects.forEach(sub => {
+    topicCounts[sub] = Object.values(allCompiledTopics).filter(t => t.subject === sub).length;
+  });
+  chips.innerHTML = subjectChipsHtml({
+    subjects: availableSubjects,
+    topicCounts,
+    totalCount: Object.keys(allCompiledTopics).length,
+    activeSubject: currentActiveSubject,
+  });
 }
+
+// One listener for all chips: the subject is read from data-subject, never from inline JS.
+document.getElementById('subjectChips').addEventListener('click', e => {
+  const chip = e.target.closest('.subj-chip');
+  if (!chip) return;
+  filterSubject(chip.hasAttribute('data-subject-all') ? 'all' : chip.dataset.subject);
+});
 
 function filterSubject(sub) {
   currentActiveSubject = sub;
@@ -374,107 +392,36 @@ function renderStats(p) {
   document.getElementById('statQsSub').textContent  = `${corr} correct answers total`;
 }
 
-function formatSubjTag(subject) {
-  if (!subject || subject === 'General') return '';
-  const abbrev = {
-    'Machine Learning': 'ML',
-    'Artificial Intelligence': 'AI',
-    'Computer Science': 'CS',
-    'English': 'ENG',
-    'Mathematics': 'MATH',
-    'Physics': 'PHYS',
-    'Chemistry': 'CHEM',
-    'Biology': 'BIO',
-    'History': 'HIST'
-  }[subject] || (subject.length > 7 ? subject.slice(0, 5) + '.' : subject);
-
-  let cls = 'subj-gen';
-  if (/machine|ml|ai/i.test(subject)) cls = 'subj-ml';
-  else if (/english|eng|grammar/i.test(subject)) cls = 'subj-eng';
-  else if (/math/i.test(subject)) cls = 'subj-math';
-  else if (/physics|phys|chem|bio/i.test(subject)) cls = 'subj-sci';
-
-  return `<span class="subj-tag ${cls}" title="${esc(subject)}">${esc(abbrev)}</span>`;
-}
-
 /* ── Topics ── */
 function renderTopics(topicPerf, subjectFilter = 'all') {
   const weak   = getWeakTopics(topicPerf, subjectFilter);
   const strong = getStrongTopics(topicPerf, subjectFilter);
+  const showSubjectTag = subjectFilter === 'all';
 
-  // Weak
   const weakWrap = document.getElementById('weakTopicsWrap');
+  const feedbackBox = document.getElementById('feedbackBox');
   if (weak.length) {
-    weakWrap.innerHTML = weak.map(t => {
-      const showTag = subjectFilter === 'all' && t.subject && t.subject !== 'General';
-      const tagHtml = showTag ? formatSubjTag(t.subject) : '';
-      return `
-        <div class="topic-row weak">
-          <div class="topic-label" title="${esc(t.subject)} - ${esc(t.topic)}">${tagHtml}<span class="topic-name">${esc(t.topic)}</span></div>
-          <div class="topic-bar-wrap"><div class="topic-bar" style="width:${t.accuracy}%"></div></div>
-          <div class="topic-pct">${t.accuracy}%</div>
-        </div>`;
-    }).join('');
-
-    // Smart feedback (only for weak topics)
-    const fb = document.getElementById('feedbackBox');
-    fb.classList.remove('hidden');
-    const msgs = weak.slice(0, 3).map(t => {
-      const subTag = (subjectFilter === 'all' && t.subject && t.subject !== 'General')
-        ? formatSubjTag(t.subject) + ' '
-        : '';
-      if (t.accuracy < 40) return `${icon('warning')} ${subTag}<strong>${esc(t.topic)}</strong> — only ${t.accuracy}% accuracy. Revisit the basics.`;
-      if (t.accuracy < 60) return `${icon('menu_book')} ${subTag}<strong>${esc(t.topic)}</strong> — ${t.accuracy}%. Practice more questions on this topic.`;
-      return `${icon('autorenew')} ${subTag}<strong>${esc(t.topic)}</strong> — ${t.accuracy}%. A few more revisions and you'll master this.`;
-    });
-    fb.innerHTML = msgs.join('<br>');
+    weakWrap.innerHTML = topicRowsHtml(weak, { kind: 'weak', showSubjectTag });
+    feedbackBox.innerHTML = weakTopicFeedbackHtml(weak, { showSubjectTag });
+    feedbackBox.classList.remove('hidden');
   } else {
-    const msg = subjectFilter === 'all'
-      ? 'No weak areas below 75% accuracy.'
-      : `No weak areas in ${esc(subjectFilter)}. All topics above 75%.`;
-    weakWrap.innerHTML = `<div class="empty">${icon('task_alt', 'e-icon')}${msg}</div>`;
-    document.getElementById('feedbackBox').classList.add('hidden');
+    weakWrap.innerHTML = `<div class="empty">${icon('task_alt', 'e-icon')}${noWeakTopicsMessage(subjectFilter)}</div>`;
+    feedbackBox.classList.add('hidden');
   }
 
-  // Strong
   const strongWrap = document.getElementById('strongTopicsWrap');
   if (strong.length) {
-    strongWrap.innerHTML = strong.map(t => {
-      const showTag = subjectFilter === 'all' && t.subject && t.subject !== 'General';
-      const tagHtml = showTag ? formatSubjTag(t.subject) : '';
-      return `
-        <div class="topic-row strong">
-          <div class="topic-label" title="${esc(t.subject)} - ${esc(t.topic)}">${tagHtml}<span class="topic-name">${esc(t.topic)}</span></div>
-          <div class="topic-bar-wrap"><div class="topic-bar" style="width:${t.accuracy}%"></div></div>
-          <div class="topic-pct">${t.accuracy}%</div>
-        </div>`;
-    }).join('');
+    strongWrap.innerHTML = topicRowsHtml(strong, { kind: 'strong', showSubjectTag });
   } else {
-    const msg = subjectFilter === 'all'
-      ? 'Complete MCQ tests with 60%+ score to see your strengths'
-      : `Complete more tests in ${esc(subjectFilter)} with 60%+ score to build your strengths`;
-    strongWrap.innerHTML = `<div class="empty">${icon('target', 'e-icon')}${msg}</div>`;
+    strongWrap.innerHTML = `<div class="empty">${icon('target', 'e-icon')}${noStrongTopicsMessage(subjectFilter)}</div>`;
   }
 }
 
 /* ── Score Chart ── */
 function renderChart(scores) {
   const wrap = document.getElementById('chartWrap');
-  const recent = scores.slice(0, 10).reverse(); // oldest first
-  if (!recent.length) { wrap.innerHTML = '<div class="chart-empty">No MCQ scores yet. Take a quiz!</div>'; return; }
-
-  const max = Math.max(...recent.map(s => s.score), 1);
-  const bars = recent.map(s => {
-    const h   = Math.max(6, Math.round((s.score / 100) * 86));
-    const col = s.score >= 75 ? 'var(--green)' : s.score >= 50 ? 'var(--amber)' : 'var(--tiger)';
-    const d   = s.date ? s.date.slice(5) : ''; // MM-DD
-    return `<div class="chart-bar-wrap">
-      <div class="chart-val" style="color:${col}">${s.score}%</div>
-      <div class="chart-bar" style="height:${h}px;background:${col}"></div>
-      <div class="chart-date">${d}</div>
-    </div>`;
-  });
-  wrap.innerHTML = `<div class="chart-bars">${bars.join('')}</div>`;
+  if (!scores.length) { wrap.innerHTML = '<div class="chart-empty">No MCQ scores yet. Take a quiz!</div>'; return; }
+  wrap.innerHTML = chartHtml(scores);
 }
 
 /* ── History ── */
@@ -484,48 +431,36 @@ function renderHistory(tests) {
     wrap.innerHTML = '<div class="empty"><span class="ms e-icon" aria-hidden="true">folder_open</span>No tests yet. Generate your first test!</div>';
     return;
   }
-  const icons = { mcq:'quiz', flashcard:'style', long:'edit_note' };
-  wrap.innerHTML = tests.map(t => {
-    const score = t.scorePercent != null ? t.scorePercent : null;
-    let scoreHtml = '<span class="hist-score na">—</span>';
-    if (score != null) {
-      const cls = score >= 75 ? 'good' : score >= 50 ? 'mid' : 'bad';
-      scoreHtml = `<span class="hist-score ${cls}">${score}%</span>`;
-    }
-    const date = t.createdAt?.toDate ? t.createdAt.toDate().toLocaleDateString('en-IN',{day:'numeric',month:'short'}) : '—';
-    return `<div class="hist-item">
-      <div class="hist-icon ${t.type}">${icon(icons[t.type] || 'description')}</div>
-      <div class="hist-info">
-        <div class="hist-title">${esc(t.title||'Untitled')}</div>
-        <div class="hist-meta">${t.questionCount||0} Qs · ${t.difficulty||'Medium'} · ${date}</div>
-      </div>
-      <span class="hist-tag ${t.type}">${t.type?.toUpperCase()}</span>
-      ${scoreHtml}
-      <button class="delete-btn" onclick="delTest('${t.id}',this)" title="Delete" aria-label="Delete test">${icon('delete')}</button>
-    </div>`;
-  }).join('');
+  wrap.innerHTML = historyItemsHtml(tests);
 }
 
+// One listener for all delete buttons: the test id is read from data-test-id.
+document.getElementById('historyList').addEventListener('click', e => {
+  const btn = e.target.closest('.delete-btn');
+  if (btn) delTest(btn.dataset.testId, btn);
+});
+
 async function delTest(id, btn) {
-  if (!confirm('Delete this test?')) return;
-  btn.closest('.hist-item').style.opacity = '.4';
+  if (!confirm('Delete this test? Your past scores stay in your analytics.')) return;
+  const item = btn.closest('.hist-item');
+  item.style.opacity = '.4';
   try {
     await deleteTest(id);
-    btn.closest('.hist-item').remove();
+    item.remove();
     toast('Test deleted','success');
   } catch(e) {
-    btn.closest('.hist-item').style.opacity = '';
+    item.style.opacity = '';
     toast('Could not delete','error');
   }
 }
 
-function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function toast(msg, type='info') {
   const wrap = document.getElementById('toastWrap');
   const el = document.createElement('div');
   el.className = `toast ${type}`;
+  el.setAttribute('role', type === 'error' ? 'alert' : 'status');
   el.innerHTML = icon({ success: 'check_circle', error: 'error', info: 'info' }[type] || 'info') + ' ';
-  el.append(msg);
+  el.append(msg); // append() inserts text, never HTML
   wrap.appendChild(el);
   setTimeout(()=>el.remove(),3500);
 }
