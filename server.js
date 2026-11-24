@@ -1,30 +1,33 @@
-require('dotenv').config();
+// Entry point: load config, connect to Firebase, start the server.
+require('dotenv').config({ quiet: true });
 
-const path = require('path');
-const express = require('express');
-const rateLimit = require('express-rate-limit');
+const { loadConfig } = require('./api/config');
+const { initFirebaseAdmin } = require('./api/firebaseAdmin');
+const { createFirestoreQuotaStore } = require('./api/quota');
+const { selectLLMCaller } = require('./api/providers');
+const { createApp } = require('./api/createApp');
 
-const generateRoute = require('./api/generate');
+function loadConfigOrExit() {
+  try {
+    return loadConfig(process.env);
+  } catch (err) {
+    console.error(err.message);
+    console.error('The server did not start. Fix the settings above in .env (local) or the Render dashboard.');
+    process.exit(1);
+  }
+}
 
-const app = express();
-const PORT = process.env.PORT || 8080;
-app.set('trust proxy', 1); // Render sits behind a proxy; needed for correct client IPs
+const config = loadConfigOrExit();
+const firebase = initFirebaseAdmin(config.firebaseServiceAccount);
 
-app.use(express.json({ limit: '2mb' }));
-
-const generateLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000,
-  limit: 20,                       // 20 generations / hour / IP
-  standardHeaders: 'draft-7',
-  legacyHeaders: false,
-  message: { error: 'Too many requests. Try again later.' },
+const app = createApp({
+  verifyIdToken: firebase.verifyIdToken,
+  quotaStore: createFirestoreQuotaStore({ db: firebase.db, limit: config.dailyGenerationQuota }),
+  callLLM: selectLLMCaller(config.llmProvider),
+  allowedOrigins: config.allowedOrigins,
+  firebaseAuthDomain: config.firebaseAuthDomain,
 });
 
-app.post('/api/generate', generateLimiter, generateRoute);
-app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }));
-
-// Only /public is web-visible. Server code, rules and package files are not.
-app.use(express.static(path.join(__dirname, 'public')));
-app.get('*', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
-
-app.listen(PORT, () => console.log(`testyAI listening on :${PORT}`));
+app.listen(config.port, () => {
+  console.log(`testyAI listening on :${config.port} (LLM: ${config.llmProvider}, daily quota: ${config.dailyGenerationQuota})`);
+});

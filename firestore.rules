@@ -29,6 +29,10 @@ service cloud.firestore {
       allow update: if isAuthenticated() && resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid;
     }
 
+    // quotas/{userId} (daily generation counts) is written only by the server
+    // through the Admin SDK, which bypasses these rules. Browsers get no
+    // access at all: it is covered by the default deny below.
+
     // Default deny for all other paths
     match /{document=**} {
       allow read, write: if false;

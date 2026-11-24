@@ -58,4 +58,12 @@ async function callWithFallback(args) {
   throw e;
 }
 
-module.exports = { callWithFallback };
+/** Picks the LLM caller from config: the real fallback chain, or the mock. */
+function selectLLMCaller(llmProvider) {
+  if (llmProvider === 'mock') {
+    return require('./mock').callMockProvider;
+  }
+  return callWithFallback;
+}
+
+module.exports = { callWithFallback, selectLLMCaller };
