@@ -22,6 +22,12 @@ test('the file input accept attribute matches the supported list', () => {
   assert.equal(files.ACCEPT_ATTRIBUTE, '.pdf,.docx,.txt');
 });
 
+test('trimmed files produce a notice with the share used', () => {
+  const notice = files.trimmedDocsNotice([{ name: 'a.pdf', percentKept: 40 }]);
+  assert.match(notice, /"a\.pdf" \(40% used\)/);
+  assert.equal(files.trimmedDocsNotice([]), null);
+});
+
 test('skipped PDF pages produce a notice', () => {
   const notice = files.skippedPagesNotice({ name: 'big.pdf', pagesRead: 30, totalPages: 45 });
   assert.match(notice, /first 30 of 45 pages/);

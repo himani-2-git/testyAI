@@ -4,7 +4,7 @@
 
 [![Live Demo](https://img.shields.io/badge/Live_Demo-testyai.onrender.com-00c7b7?style=flat-square&logo=render&logoColor=white)](https://testyai.onrender.com)
 [![GitHub Repository](https://img.shields.io/badge/GitHub-himani--2--git%2FtestyAI-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/himani-2-git/testyAI)
-[![Node.js](https://img.shields.io/badge/Node.js-v18+-68a063?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-v24-68a063?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![Express](https://img.shields.io/badge/Express-4.19-000000?style=flat-square&logo=express&logoColor=white)](https://expressjs.com/)
 [![Firebase](https://img.shields.io/badge/Firebase-Auth%20%26%20Firestore-ffca28?style=flat-square&logo=firebase&logoColor=black)](https://firebase.google.com/)
 [![AI Providers](https://img.shields.io/badge/AI-Groq%20%7C%20Cerebras-f55036?style=flat-square)](https://groq.com/)
@@ -87,7 +87,7 @@ Passive re-reading of textbooks and lecture slides creates an **illusion of comp
 |---|---|---|
 | **Frontend UI** | HTML5, CSS3, Vanilla JavaScript | Academic notebook paper theme, responsive layouts, 3D CSS transforms |
 | **Document Processing** | [PDF.js](https://mozilla.github.io/pdf.js/), [Mammoth.js](https://github.com/mwilliamson/mammoth.js) | In-browser PDF and DOCX text extraction |
-| **Backend / Runtime** | Node.js (v18+), Express 4.19 | REST API endpoints, SPA static routing, environment isolation |
+| **Backend / Runtime** | Node.js 24, Express 4 | REST API endpoints, SPA static routing, environment isolation |
 | **AI Inference** | [Groq](https://groq.com/), [Cerebras](https://cerebras.ai/) | High-speed LLM inference (`gpt-oss-120b`, `qwen3-32b`, `llama-3.3-70b`) |
 | **Validation** | [Ajv (Another JSON Schema Validator)](https://ajv.js.org/) | Compiles JSON Schemas to validate model outputs before client delivery |
 | **Database & Auth** | Google Firebase (Auth & Cloud Firestore) | Google/Email authentication, test results, topic performance, and streak persistence |
@@ -168,7 +168,7 @@ testyAI/
 ## Local Setup & Environment Configuration
 
 ### Prerequisites
-- [Node.js](https://nodejs.org/) (v18.0.0 or higher recommended)
+- [Node.js](https://nodejs.org/) 24 (LTS)
 - [npm](https://www.npmjs.com/) (bundled with Node.js)
 - A [Groq Cloud API Key](https://console.groq.com/)
 - *(Optional)* A secondary Groq API key and/or a [Cerebras API Key](https://inference.cerebras.ai/) for multi-provider fallback
@@ -198,13 +198,14 @@ cp .env.example .env
 Copy-Item .env.example .env
 ```
 
-Open `.env` and supply your API keys:
-```ini
-GROQ_API_KEY=gsk_your_primary_groq_api_key_here
-GROQ_API_KEY_2=your_secondary_groq_api_key_here     # Optional
-CEREBRAS_API_KEY=your_cerebras_api_key_here         # Optional
-PORT=8080
-```
+Open `.env` and fill it in. Every variable is explained in [`.env.example`](.env.example). The required ones are:
+
+- `GROQ_API_KEY` or `CEREBRAS_API_KEY` (or `LLM_PROVIDER=mock` to work without any key)
+- `FIREBASE_SERVICE_ACCOUNT_BASE64`: your Firebase service-account key, base64-encoded. The server uses it to verify sign-in tokens and to store each user's daily generation count.
+
+The server checks the configuration at startup and stops with a list of what is missing.
+
+Use Node.js 24 (the version in `.node-version`, the same as Render).
 
 ### 4. Start the Application
 For production runtime:
@@ -285,7 +286,7 @@ firebase deploy --only firestore:rules
 3. Configure build and start commands:
    - **Build Command**: `npm install`
    - **Start Command**: `npm start`
-4. In the **Environment** settings, add your `GROQ_API_KEY` (and optional `GROQ_API_KEY_2`, `CEREBRAS_API_KEY`).
+4. In the **Environment** settings, add `GROQ_API_KEY` (and optional `GROQ_API_KEY_2`, `CEREBRAS_API_KEY`), `FIREBASE_SERVICE_ACCOUNT_BASE64`, `ALLOWED_ORIGINS=https://<your-app>.onrender.com` and `NODE_ENV=production`. Optional: `DAILY_GENERATION_QUOTA` (default 30).
 5. Ensure your production URL (e.g., `https://testyai.onrender.com`) is added to **Firebase Console** → **Authentication** → **Settings** → **Authorized Domains**.
 
 ---

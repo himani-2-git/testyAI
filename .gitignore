@@ -1,5 +1,13 @@
 node_modules/
-.env
 *.log
 .DS_Store
 Thumbs.db
+
+# Secrets: never commit these
+.env
+.env.*
+!.env.example
+# Firebase service-account keys (the JSON file you download from the console)
+*-firebase-adminsdk-*.json
+*service-account*.json
+*serviceAccount*.json

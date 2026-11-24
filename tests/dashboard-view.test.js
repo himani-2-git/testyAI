@@ -5,10 +5,16 @@ const view = require('../public/js/dashboardView');
 // The subject comes from the LLM, so notes can try to inject markup through it.
 const ATTACK_SUBJECT = `x');alert(1);//" onmouseover="alert(2)`;
 
+// Escaped attack text may still contain the WORD "onmouseover"; that is harmless.
+// What must never appear: a raw quote that ends an attribute and starts a handler,
+// an onclick we wrote ourselves, or any HTML tag that is not one of ours.
+const OUR_TAGS = /<(?!\/?(div|span|button|strong|br)\b)/i;
+
 function assertNoInjection(html) {
-  assert.ok(!/onclick|onmouseover|onerror/i.test(html), 'no inline event handlers');
-  assert.ok(!html.includes(`" onmouseover`), 'attribute quote is escaped');
+  assert.ok(!/onclick\s*=/i.test(html), 'no inline onclick handlers');
+  assert.ok(!/["']\s*on\w+\s*=/i.test(html), 'no raw quote breaks out of an attribute');
   assert.ok(!html.includes(`');alert`), 'single quote is escaped');
+  assert.ok(!OUR_TAGS.test(html), 'no injected tags such as <img> or <script>');
 }
 
 test('subject chips: a malicious subject cannot inject script', () => {
@@ -54,6 +60,13 @@ test('empty-state messages use the real 60% / 75% thresholds', () => {
   assert.match(view.noStrongTopicsMessage('Physics'), /75%/);
   assert.ok(!view.noWeakTopicsMessage('all').includes('75%'));
   assert.ok(!view.noStrongTopicsMessage('all').includes('60%'));
+});
+
+test('chart: stored scores are forced to numbers and dates are escaped', () => {
+  const html = view.chartHtml([{ score: '<script>', date: '2026-<b>' }]);
+  assert.ok(!html.includes('<script>'));
+  assert.ok(!html.includes('<b>'));
+  assert.ok(html.includes('0%'));
 });
 
 test('empty-state messages escape the subject name', () => {
