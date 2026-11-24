@@ -35,6 +35,26 @@ test('buildNotes: every document gets a share of the budget', () => {
   assert.ok(out.length <= 12000 + 200);
 });
 
+test('buildNotes: the result fits the budget including the document headers', () => {
+  const docs = ['A', 'B', 'C'].map(n => ({ name: n + '.pdf', text: n.repeat(9000) }));
+  assert.ok(A.buildNotes(docs, 12000).length <= 12000);
+});
+
+test('findTrimmedDocs: reports which files were cut and how much was kept', () => {
+  const docs = [
+    { name: 'long.pdf', text: 'L'.repeat(20000) },
+    { name: 'short.txt', text: 'S'.repeat(100) },
+  ];
+  const trimmed = A.findTrimmedDocs(docs, 12000);
+  assert.equal(trimmed.length, 1);
+  assert.equal(trimmed[0].name, 'long.pdf');
+  assert.ok(trimmed[0].percentKept > 0 && trimmed[0].percentKept < 100);
+});
+
+test('findTrimmedDocs: nothing is reported when everything fits', () => {
+  assert.deepEqual(A.findTrimmedDocs([{ name: 'a.txt', text: 'hello' }], 12000), []);
+});
+
 test('mergeTopicPerf keeps subject metadata and accumulates counts', () => {
   const r = { 'ML • PCA': { subject: 'ML', cleanTopic: 'PCA', correct: 2, total: 3 } };
   const once = A.mergeTopicPerf({}, r);
